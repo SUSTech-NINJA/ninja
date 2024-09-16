@@ -1,0 +1,150 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    font-weight: 400;
+
+    color-scheme: light dark;
+    background: #fefefe;
+
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+#app {
+    width: 100%;
+    height: 100%;
+    margin: 0 auto;
+    padding: 4rem;
+    text-align: center;
+    color: #2c3e50;
+}
+
+@media (max-width: 1400px) {
+    #app {
+        padding: 2.8rem;
+    }
+}
+
+@media (max-width: 1000px) {
+    #app {
+        padding: 1.5rem;
+    }
+}
+
+.marked code {
+    font-style: italic;
+}
+
+a {
+    text-decoration: underline;
+}
+
+::-webkit-scrollbar {
+    -webkit-appearance: none;
+}
+
+::-webkit-scrollbar:vertical {
+    width: 2px;
+}
+
+::-webkit-scrollbar:horizontal {
+    height: 2px;
+}
+
+::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    border: 4px solid rgba(255, 255, 255, .4);
+    background-color: rgba(0, 0, 0, .5);
+}
+
+.chessboard-bg {
+    content: "";
+    background-image: linear-gradient(45deg, rgba(0, 0, 0, 0.3) 25%, transparent 25%, transparent 75%, rgba(0, 0, 0, 0.3) 75%),
+    linear-gradient(45deg, rgba(0, 0, 0, 0.3) 25%, transparent 25%, transparent 75%, rgba(0, 0, 0, 0.3) 75%);
+    background-position: 0 0, 5px 5px;
+    background-size: 10px 10px;
+}
+
+.el-overlay:has(.el-overlay-dialog) {
+    pointer-events: none;
+    background-color: transparent;
+    overflow: scroll;
+}
+
+.el-overlay .el-overlay-dialog {
+    width: 100%;
+    height: 100%;
+}
+
+.el-overlay .el-dialog {
+    pointer-events: auto;
+}
+
+.node-selected {
+    border: 2.7px solid #000000 !important;
+}
+
+pre code.hljs {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.marked h1,
+.marked h2,
+.marked h3,
+.marked h4,
+.marked h5,
+.marked h6,
+.like-marked-h {
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+    font-size: larger;
+}
+
+.lm_controls .lm_close,
+.lm_header .lm_close_tab {
+    display: none;
+}
+
+.el-input__wrapper {
+    --el-input-text-color: #606266FF;
+    --el-input-placeholder-color: #A8ABB2FF;
+    --el-input-hover-border-color: #909399FF;
+    --el-input-clear-hover-color: #909399FF;
+    --el-input-focus-border-color: #409EFFFF;
+}
+
+.el-tag + .el-tag {
+    margin-left: 5px;
+}
+
+.el-divider--horizontal {
+    margin-top: 10px !important;
+    margin-bottom: 10px !important;
+}
+
+.el-dialog {
+    margin-top: 4% !important;
+}
+
+.hljs-copy {
+    float: right;
+    cursor: pointer;
+    position: relative;
+    right: 0;
+    top: 0;
+}
