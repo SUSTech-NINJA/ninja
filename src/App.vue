@@ -6,8 +6,8 @@ const chat = useChatStore();
 </script>
 
 <template>
-    <div class="w-full h-full el-card flex flex-row is-always-shadow">
-        <div class="h-full w-[250px] md:w-[300px] xl:w-[350px] !flex flex-col p-6 border-r-[1.5px] bg-amber-50">
+    <div class="w-full h-full el-card flex flex-row is-always-shadow !rounded-2xl">
+        <div class="h-full w-[250px] md:w-[300px] xl:w-[350px] !flex flex-col p-6 border-r-[1.5px] bg-blue-50">
             <LeftBar />
         </div>
         <div class="h-full grow">

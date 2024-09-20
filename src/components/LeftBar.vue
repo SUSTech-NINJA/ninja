@@ -22,7 +22,7 @@ const chat = useChatStore();
             </div>
         </div>
         <el-card v-for="item in chat.chatList" shadow="hover" class="mb-3 relative"
-            :class="{'!border-[1px] !border-amber-500': chat.current === item.id}"
+            :class="{'!border-[1px] !border-blue-500': chat.current === item.id}"
             @click="chat.current = item.id">
             <div class="flex-none w-full text-left">
                 <p class="text-normal mb-1">{{ item.name }}</p>
