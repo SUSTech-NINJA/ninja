@@ -30,8 +30,14 @@ function login() {
         .then(res => {
             loginLoading.value = false;
             if (res.status === 200) {
-                toaster.show('Login successful', {type: 'success'});
                 global.notLogin = false;
+                let json = res.data;
+                if (typeof json === 'string') {
+                    json = JSON.parse(json);
+                }
+                global.uuid = json.uuid;
+                global.token = json.token;
+                toaster.show('Login successful', {type: 'success'});
             } else {
                 toaster.show('Login failed', {type: 'error'});
             }
@@ -64,6 +70,12 @@ function register() {
                 toaster.show('Register successful', {type: 'success'});
                 global.register = false;
                 global.notLogin = false;
+                let json = res.data;
+                if (typeof json === 'string') {
+                    json = JSON.parse(json);
+                }
+                global.uuid = json.uuid;
+                global.token = json.token;
             } else {
                 toaster.show('Register failed', {type: 'error'});
             }

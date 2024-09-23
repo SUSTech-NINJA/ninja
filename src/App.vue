@@ -6,7 +6,9 @@ import {useGlobalStore} from "./stores/global";
 
 const chat = useChatStore();
 const global = useGlobalStore();
-// global.notLogin = true;
+if (global.uuid === 0 || global.token === '') {
+    global.notLogin = true;
+}
 </script>
 
 <template>
