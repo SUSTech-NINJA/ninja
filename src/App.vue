@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import LeftBar from "./components/LeftBar.vue";
 import {useChatStore} from "./stores/chat";
+import LoginPanel from "./components/LoginPanel.vue";
+import {useGlobalStore} from "./stores/global";
 
 const chat = useChatStore();
+const global = useGlobalStore();
+// global.notLogin = true;
 </script>
 
 <template>
@@ -14,4 +18,5 @@ const chat = useChatStore();
             <router-view />
         </div>
     </div>
+    <LoginPanel />
 </template>

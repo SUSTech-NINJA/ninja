@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {useChatStore} from "../stores/chat";
-import {Close, Setting} from "@element-plus/icons-vue";
+import {Close, Setting, User} from "@element-plus/icons-vue";
 
 const chat = useChatStore();
 </script>
@@ -9,6 +9,9 @@ const chat = useChatStore();
     <div class="card-header text-left text-2xl font-bold flex-none grid grid-cols-2">
         <p>Ninja Chat</p>
         <div class="text-right">
+            <router-link to="/user" class="mr-2">
+                <el-button :icon="User" circle />
+            </router-link>
             <router-link to="/settings">
                 <el-button :icon="Setting" circle />
             </router-link>

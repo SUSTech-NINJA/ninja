@@ -7,6 +7,7 @@ export type ChatInfo = {
     msg: string[];
 }
 
+// @ts-ignore
 export const useChatStore = defineStore('chat', {
     state: () => ({
         current: -1,
@@ -40,5 +41,5 @@ export const useChatStore = defineStore('chat', {
             this.chatList = this.chatList.filter(chat => chat.id !== id);
         }
     },
-    persist: true
+    persist: {debug: true}
 });

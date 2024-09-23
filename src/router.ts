@@ -1,11 +1,9 @@
 import {createMemoryHistory, createRouter} from 'vue-router';
-import ChatView from "./views/ChatView.vue";
-import SettingsView from "./views/SettingsView.vue";
-
 
 const routes = [
-    {path: '/', component: ChatView},
-    {path: '/settings', component: SettingsView},
+    {path: '/', component: import('./views/ChatView.vue')},
+    {path: '/settings', component: import('./views/SettingsView.vue')},
+    {path: '/user', component: () => import('./views/UserView.vue')},
 ];
 
 export const router = createRouter({

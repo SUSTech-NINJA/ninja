@@ -79,17 +79,6 @@ a {
     background-size: 10px 10px;
 }
 
-.el-overlay:has(.el-overlay-dialog) {
-    pointer-events: none;
-    background-color: transparent;
-    overflow: scroll;
-}
-
-.el-overlay .el-overlay-dialog {
-    width: 100%;
-    height: 100%;
-}
-
 .el-overlay .el-dialog {
     pointer-events: auto;
 }
@@ -101,23 +90,6 @@ a {
 pre code.hljs {
     margin-top: 10px;
     margin-bottom: 10px;
-}
-
-.marked h1,
-.marked h2,
-.marked h3,
-.marked h4,
-.marked h5,
-.marked h6,
-.like-marked-h {
-    margin-top: 1em;
-    margin-bottom: 0.5em;
-    font-size: larger;
-}
-
-.lm_controls .lm_close,
-.lm_header .lm_close_tab {
-    display: none;
 }
 
 .el-input__wrapper {

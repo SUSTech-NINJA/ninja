@@ -1,7 +1,11 @@
 import {defineStore} from 'pinia';
 
+// @ts-ignore
 export const useGlobalStore = defineStore('global', {
-    state: () => ({}),
+    state: () => ({
+        notLogin: true,
+        username: '',
+    }),
     actions: {},
-    persist: true
+    persist: {debug: true}
 });
