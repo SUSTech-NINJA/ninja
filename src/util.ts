@@ -1,6 +1,22 @@
-export const toasterOptions = {
-    position: 'top',
-    duration: 3000,
-};
+import Dayjs from "dayjs";
 
-export const host = 'http://127.0.0.1:4523/m1/5188287-4853858-default';
+export function addHoverClass(e) {
+    e.target.classList.add('is-hovering');
+}
+
+export function removeHoverClass(e) {
+    e.target.classList.remove('is-hovering');
+}
+
+export function addActiveClass(e) {
+    e.target.classList.add('is-selected');
+}
+
+export function removeActiveClass(e) {
+    e.target.classList.remove('is-selected');
+}
+
+export function getTimeString(timestamp: number) {
+    const date = Dayjs(timestamp);
+    return date.format('MM-DD HH:mm:ss');
+}

@@ -2,8 +2,7 @@
 import {useGlobalStore} from "../stores/global";
 import {ref} from "vue";
 import {createToaster} from "@meforma/vue-toaster";
-import {host, toasterOptions} from "../util";
-import axios from "axios";
+import {createConnection, toasterOptions} from "../config";
 
 const toaster = createToaster(toasterOptions);
 const global = useGlobalStore();
@@ -12,10 +11,7 @@ const loginForm = ref({
     username: '',
     password: ''
 }), loginLoading = ref(false);
-const conn = axios.create({
-    baseURL: host,
-    timeout: 1000
-});
+const conn = createConnection();
 
 function login() {
     if (loginForm.value.username === '' || loginForm.value.password === '') {

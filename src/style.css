@@ -120,3 +120,8 @@ pre code.hljs {
     right: 0;
     top: 0;
 }
+
+.el-card__body {
+    padding: 0.8rem !important;
+    padding-left: 1rem !important;
+}

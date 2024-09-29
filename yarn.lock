@@ -1438,7 +1438,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dayjs@npm:^1.11.3":
+"dayjs@npm:^1.11.13, dayjs@npm:^1.11.3":
   version: 1.11.13
   resolution: "dayjs@npm:1.11.13"
   checksum: f388db88a6aa93956c1f6121644e783391c7b738b73dbc54485578736565c8931bdfba4bb94e9b1535c6e509c97d5deb918bbe1ae6b34358d994de735055cca9
@@ -2736,6 +2736,7 @@ __metadata:
     "@vitejs/plugin-vue": ^5.1.2
     autoprefixer: ^10.4.20
     axios: ^1.7.7
+    dayjs: ^1.11.13
     element-plus: ^2.8.3
     openai: ^4.61.0
     pinia: ^2.2.2
