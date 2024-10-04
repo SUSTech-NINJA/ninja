@@ -5,6 +5,7 @@ import {Close, MagicStick, More, Search, Setting, User} from "@element-plus/icon
 import {addActiveClass, addHoverClass, getTimeString, removeActiveClass, removeHoverClass} from "../util";
 import {createConnection, toasterOptions, todo} from "../config";
 import {createToaster} from "@meforma/vue-toaster";
+import {useRouter} from "vue-router";
 
 const chat = useChatStore();
 const searchInput = ref("");
@@ -13,6 +14,7 @@ const fetchFlag = ref(false);
 const robotList = ref(['GPT 4 Turbo', 'GPT 4o', 'GPT 3.5 Turbo']);
 const conn = createConnection();
 const toaster = createToaster(toasterOptions);
+const router = useRouter();
 
 const showRechargeDialog = ref(false);
 const rechargeOptions = ref([
@@ -91,6 +93,7 @@ const getRobotRest = computed(() => {
     return robotList.value.slice(4);
 });
 
+
 // operate token
 const getToken = () => {
     conn.get('/shop/current')
@@ -125,6 +128,9 @@ const selectRechargeOption = (option) => {
         });
 };
 
+function gotoChat() {
+    router.push('/');
+}
 </script>
 
 
@@ -141,6 +147,7 @@ const selectRechargeOption = (option) => {
                 </router-link>
             </div>
         </div>
+
         <hr class="mt-3 mb-3"/>
         <div class="w-full">
             <el-input
@@ -184,14 +191,18 @@ const selectRechargeOption = (option) => {
                         </template>
                     </el-dropdown>
                 </div>
+
                 <div class="pl-1">
-                    <el-button class="w-full mt-2" @click="todo">
-                        <el-icon>
-                            <MagicStick/>
-                        </el-icon>
-                        <span class="ml-2">Discovery</span>
-                    </el-button>
+                    <router-link to="/discovery">
+                        <el-button class="w-full mt-2">
+                            <el-icon>
+                                <MagicStick/>
+                            </el-icon>
+                            <span class="ml-2">Discovery</span>
+                        </el-button>
+                    </router-link>
                 </div>
+
             </div>
         </div>
         <hr class="mt-3 mb-3 col-span-2"/>
@@ -204,7 +215,7 @@ const selectRechargeOption = (option) => {
         </div>
         <el-card v-for="item in chat.chatList" shadow="hover" class="mb-3 relative"
                  :class="{'!border-[1px] !border-blue-500': chat.current === item.chatid}"
-                 @click="chat.current = item.chatid; fetchFlag = !fetchFlag">
+                 @click="chat.current = item.chatid; fetchFlag = !fetchFlag; gotoChat()">
             <div class="flex-none w-full text-left">
                 <p class="text-normal mb-1">{{ item.title }}</p>
                 <p class="text-xs">{{ getTimeString(item.time) }}</p>
