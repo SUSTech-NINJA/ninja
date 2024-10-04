@@ -6,6 +6,12 @@ export type ChatInfo = {
     title: string;
 }
 
+export type FileInfo = {
+    file: string;
+    name: string;
+    type: string;
+}
+
 // @ts-ignore
 export const useChatStore = defineStore('chat', {
     state: () => ({

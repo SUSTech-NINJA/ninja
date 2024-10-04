@@ -20,3 +20,7 @@ export function getTimeString(timestamp: number) {
     const date = Dayjs(timestamp);
     return date.format('MM-DD HH:mm:ss');
 }
+
+export function firstUpperCase(str: string) {
+    return str.replace(/^\S/, s => s.toUpperCase());
+}

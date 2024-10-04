@@ -9,6 +9,7 @@ export const useGlobalStore = defineStore('global', {
         uuid: '',
         dialogs: {
             rate: false,
+            multimodal: false,
         },
     }),
     actions: {},
