@@ -1,23 +1,24 @@
 <script setup lang="ts">
-import {ref, onMounted, computed} from 'vue';
-import axios from 'axios';
+import {computed, onMounted, ref} from 'vue';
 import {
+    ElAvatar,
+    ElButton,
     ElCard,
     ElDialog,
-    ElButton,
-    ElInput,
-    ElRate,
-    ElIcon,
-    ElAvatar,
-    ElMessage,
-    ElScrollbar,
     ElForm,
     ElFormItem,
+    ElIcon,
+    ElInput,
+    ElMessage,
+    ElRate,
+    ElScrollbar,
 } from 'element-plus';
-import {Close, ChatDotRound} from '@element-plus/icons-vue';
+import {ChatDotRound, Close} from '@element-plus/icons-vue';
 import {useGlobalStore} from '../stores/global';
-import {useRouter, useRoute, RouterLink} from 'vue-router';
+import {RouterLink, useRoute, useRouter} from 'vue-router';
 import dayjs from 'dayjs';
+import {getTimeString} from "../util";
+import {createConnection} from "../config";
 
 const global = useGlobalStore();
 const router = useRouter();
@@ -78,13 +79,7 @@ const showMessageDialog = ref(false);
 const showRateDialog = ref(false); // Added for user rating dialog
 
 // Axios instance with base config and request interceptor
-const api = axios.create({
-    baseURL: 'http://127.0.0.1:4523/m1/5188287-4853858-default',
-    headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${global.token}`,
-    },
-});
+const api = createConnection();
 
 // Request interceptor to add Token to request headers
 api.interceptors.request.use((config) => {
@@ -365,13 +360,8 @@ function inputFile(event) {
     let fileReader = new FileReader();
     fileReader.readAsDataURL(event.target.files[0]);
     fileReader.onload = function (e) {
-        userInfo.value.avatar = e.target.result;
+        userInfo.value.avatar = e.target.result as any;
     };
-}
-
-// Format timestamp
-function getTimeString(timestamp: string) {
-    return dayjs(timestamp).format('MM-DD HH:mm:ss');
 }
 
 // Page initialization
@@ -391,9 +381,11 @@ onMounted(() => {
                 </h1>
             </div>
             <div class="text-right flex items-center justify-end">
-                <ElIcon @click="openMessages" class="cursor-pointer mr-4">
-                    <ChatDotRound/>
-                </ElIcon>
+                <a @click="openMessages" class="cursor-pointer mr-4">
+                    <ElIcon>
+                        <ChatDotRound/>
+                    </ElIcon>
+                </a>
                 <RouterLink to="/">
                     <ElIcon>
                         <Close/>
@@ -403,29 +395,34 @@ onMounted(() => {
         </div>
 
         <!-- User Info Section -->
-        <div class="mb-8">
+        <div class="mb-4">
             <div v-if="!editMode">
-                <ElAvatar :src="userInfo.avatar" size="large" class="mb-4"/>
-                <p><strong>Username:</strong> {{ userInfo.username }}</p>
-                <p><strong>Intro:</strong> {{ userInfo.intro }}</p>
-                <p v-if="isOwnProfile"><strong>Email:</strong> {{ userInfo.email }}</p>
+                <div class="flex flex-row justify-center">
+                    <ElAvatar :src="userInfo.avatar" size="large" class="mb-4"/>
+                    <div class="text-left ml-4">
+                        <p><strong>Username:</strong> {{ userInfo.username }}</p>
+                        <p><strong>Intro:</strong> {{ userInfo.intro }}</p>
+                        <p v-if="isOwnProfile"><strong>Email:</strong> {{ userInfo.email }}</p>
+                        <p><strong>Rate:</strong>
+                            <ElRate :model-value="userInfo.rate" disabled allow-half/>
+                        </p>
+                    </div>
+                </div>
             </div>
             <div v-else>
-                <ElForm>
+                <ElForm label-width="auto">
                     <ElFormItem label="Avatar">
-                        <div class="avatar-uploader mb-4">
-                            <ElAvatar :src="userInfo.avatar" size="large"/>
-                            <!-- Use input[type="file"] to upload files -->
-                            <ElButton class="ml-2">
-                                Select File
-                                <input
-                                    type="file"
-                                    @change="inputFile"
-                                    class="opacity-0 absolute top-0 right-0 left-0 bottom-0 cursor-pointer"
-                                />
-                            </ElButton>
-                            <span class="ml-2.5 text-gray-500">{{ userInfo.filename }}</span>
-                        </div>
+                        <ElAvatar :src="userInfo.avatar"/>
+                        <!-- Use input[type="file"] to upload files -->
+                        <ElButton class="ml-2">
+                            Select File
+                            <input
+                                type="file"
+                                @change="inputFile"
+                                class="opacity-0 absolute top-0 right-0 left-0 bottom-0 cursor-pointer"
+                            />
+                        </ElButton>
+                        <span class="ml-2.5 text-gray-500">{{ userInfo.filename }}</span>
                     </ElFormItem>
                     <ElFormItem label="Username">
                         <ElInput
@@ -448,7 +445,7 @@ onMounted(() => {
                             class="mb-4"
                         />
                     </ElFormItem>
-                    <ElButton @click="updateUserInfo" type="success" class="mt-4">
+                    <ElButton @click="updateUserInfo" type="success">
                         Save
                     </ElButton>
                 </ElForm>
@@ -542,22 +539,6 @@ onMounted(() => {
             </div>
         </div>
 
-        <!-- Posts Section -->
-        <div class="mt-8">
-            <h3 class="text-lg font-semibold">Posts</h3>
-            <div v-for="(post, index) in posts" :key="index" class="mb-4">
-                <div class="flex items-center mb-2">
-                    <ElAvatar :src="post.icon" size="small"/>
-                    <span class="ml-2">{{ post.name }}</span>
-                    <span class="ml-auto text-gray-500">{{ getTimeString(post.time) }}</span>
-                </div>
-                <p>{{ post.content }}</p>
-                <div v-if="post.type === 'rate'" class="mt-1">
-                    <ElRate :model-value="post.rate" disabled allow-half/>
-                </div>
-            </div>
-        </div>
-
         <!-- Robots Section -->
         <div class="mt-8">
             <h3 class="text-lg font-semibold">Robots</h3>
@@ -567,17 +548,36 @@ onMounted(() => {
                     :key="index"
                     shadow="hover"
                     @click="openRobotModal(robot)"
+                    class="text-left"
                 >
                     <div class="flex items-center mb-4">
                         <ElAvatar :src="robot.icon" size="large"/>
                         <h4 class="text-lg font-semibold ml-4">{{ robot.robot_name }}</h4>
                     </div>
-                    <p>Model: {{ robot.base_model }}</p>
-                    <p>Price: {{ robot.price }}</p>
-                    <p>Users: {{ robot.population }}</p>
+                    <p><b>Model:</b> {{ robot.base_model }}</p>
+                    <p><b>Price:</b> {{ robot.price }}</p>
+                    <p><b>Users:</b> {{ robot.population }}</p>
                     <div class="flex items-center">
-                        <p>Rating:</p>
-                        <ElRate :model-value="robot.rate" disabled allow-half/>
+                        <b>Rating:</b>
+                        <ElRate :model-value="robot.rate" disabled allow-half class="ml-1"/>
+                    </div>
+                </ElCard>
+            </div>
+        </div>
+
+        <!-- Posts Section -->
+        <div class="mt-8">
+            <h3 class="text-lg font-semibold">Posts</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                <ElCard v-for="(post, index) in posts" :key="index" class="mb-4" shadow="hover">
+                    <div class="flex items-center mb-2">
+                        <ElAvatar :src="post.icon" size="small"/>
+                        <span class="ml-2">{{ post.username }}</span>
+                        <span class="ml-auto text-gray-500">{{ getTimeString(post.time) }}</span>
+                    </div>
+                    <p>{{ post.content }}</p>
+                    <div v-if="post.type === 'rate'" class="mt-1">
+                        <ElRate :model-value="post.rate" disabled allow-half class="ml-1"/>
                     </div>
                 </ElCard>
             </div>
@@ -600,37 +600,37 @@ onMounted(() => {
                     size="large"
                     class="mb-4"
                 />
-                <p><strong>Model:</strong> {{ selectedRobot && selectedRobot.base_model }}</p>
-                <p><strong>Price:</strong> {{ selectedRobot && selectedRobot.price }}</p>
-                <p>
-                    <strong>System Prompt:</strong>
-                    {{
-                        selectedRobot &&
-                        selectedRobot.system_prompt.substring(0, 50) + '...'
-                    }}
-                </p>
-                <p><strong>Creator:</strong> {{ selectedRobot && selectedRobot.creator }}</p>
-                <p><strong>Quota:</strong> {{ selectedRobot && selectedRobot.quota }}</p>
-                <p>
-                    <strong>Knowledge Base:</strong>
-                    {{
-                        selectedRobot && selectedRobot.knowledge_base
-                            ? selectedRobot.knowledge_base.substring(0, 50) + '...'
-                            : 'N/A'
-                    }}
-                </p>
-                <p><strong>Users:</strong> {{ selectedRobot && selectedRobot.population }}</p>
-                <div class="flex items-center">
-                    <p><strong>Rating:</strong></p>
-                    <ElRate :model-value="selectedRobot && selectedRobot.rate" disabled allow-half/>
-                </div>
-                <div class="text-center mt-4">
-                    <ElButton type="primary" @click="showRobotRateModal = true">
-                        Rate
-                    </ElButton>
+                <div class="text-left">
+                    <p><strong>Model:</strong> {{ selectedRobot && selectedRobot.base_model }}</p>
+                    <p><strong>Price:</strong> {{ selectedRobot && selectedRobot.price }}</p>
+                    <p>
+                        <strong>System Prompt:</strong>
+                        {{
+                            selectedRobot &&
+                            selectedRobot.system_prompt.substring(0, 50) + '...'
+                        }}
+                    </p>
+                    <p><strong>Creator:</strong> {{ selectedRobot && selectedRobot.creator }}</p>
+                    <p><strong>Quota:</strong> {{ selectedRobot && selectedRobot.quota }}</p>
+                    <p>
+                        <strong>Knowledge Base:</strong>
+                        {{
+                            selectedRobot && selectedRobot.knowledge_base
+                                ? selectedRobot.knowledge_base.substring(0, 50) + '...'
+                                : 'N/A'
+                        }}
+                    </p>
+                    <p><strong>Users:</strong> {{ selectedRobot && selectedRobot.population }}</p>
+                    <div class="flex items-center">
+                        <p><strong>Rating:</strong></p>
+                        <ElRate :model-value="selectedRobot && selectedRobot.rate" disabled allow-half/>
+                    </div>
                 </div>
             </template>
             <template #footer>
+                <ElButton @click="showRobotRateModal = true">
+                    Rate this user
+                </ElButton>
                 <ElButton @click="showRobotModal = false">Close</ElButton>
             </template>
         </ElDialog>
@@ -699,20 +699,19 @@ onMounted(() => {
                             </div>
                         </ElScrollbar>
                         <!-- Reply input box -->
-                        <ElInput
-                            type="textarea"
-                            v-model="chatReplyContent"
-                            placeholder="Enter reply content"
-                            class="mt-4"
-                        />
-                        <ElButton type="primary" @click="sendChatReply" class="mt-2">
-                            Send
-                        </ElButton>
+                        <div class="text-right">
+                            <ElInput
+                                type="textarea"
+                                v-model="chatReplyContent"
+                                placeholder="Enter reply content"
+                                class="mt-4"
+                            />
+                            <ElButton type="primary" @click="sendChatReply" class="mt-2">
+                                Send
+                            </ElButton>
+                        </div>
                     </div>
                 </div>
-            </template>
-            <template #footer>
-                <ElButton @click="showMessagesModal = false">Close</ElButton>
             </template>
         </ElDialog>
     </div>
@@ -733,5 +732,9 @@ onMounted(() => {
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+.el-rate {
+    height: fit-content;
 }
 </style>
