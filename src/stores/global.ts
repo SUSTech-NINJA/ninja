@@ -6,7 +6,10 @@ export const useGlobalStore = defineStore('global', {
         notLogin: true,
         username: '',
         token: '',
-        uuid: 0
+        uuid: '',
+        dialogs: {
+            rate: false,
+        },
     }),
     actions: {},
     persist: {debug: true}
