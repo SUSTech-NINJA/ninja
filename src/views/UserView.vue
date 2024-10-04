@@ -9,7 +9,7 @@ const router = useRouter();
 function logOut() {
     router.push('/');
     global.notLogin = true;
-    global.uuid = 0;
+    global.uuid = '';
     global.token = '';
 }
 </script>
