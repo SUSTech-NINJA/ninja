@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {useChatStore} from "../stores/chat";
 import {computed, onMounted, ref} from "vue";
-import {Close, MagicStick, More, Search, Setting, User} from "@element-plus/icons-vue";
+import {ArrowDown, Close, MagicStick, Plus, Search, Setting, User} from "@element-plus/icons-vue";
 import {addActiveClass, addHoverClass, getTimeString, removeActiveClass, removeHoverClass} from "../util";
 import {createConnection, toasterOptions, todo} from "../config";
 import {createToaster} from "@meforma/vue-toaster";
@@ -11,12 +11,12 @@ const chat = useChatStore();
 const searchInput = ref("");
 const token = ref(-1);
 const fetchFlag = ref(false);
-const robotList = ref(['GPT 4 Turbo', 'GPT 4o', 'GPT 3.5 Turbo']);
+const robotList = ref([]), baseModelList = ref([]);
 const conn = createConnection();
 const toaster = createToaster(toasterOptions);
 const router = useRouter();
 
-const showRechargeDialog = ref(false);
+const showRechargeDialog = ref(false), createBotDialog = ref(false);
 const rechargeOptions = ref([
     {price: 6, tokens: 60},
     {price: 30, tokens: 300},
@@ -25,6 +25,14 @@ const rechargeOptions = ref([
     {price: 328, tokens: 3880},
     {price: 648, tokens: 8080},
 ]);
+const createBotData = ref({
+    base_model_id: '',
+    system_prompt: '',
+    knowledge_base: '',
+    price: 0,
+    quota: 0,
+    icon: '',
+}), robotIconName = ref('');
 
 onMounted(() => fetcher());
 let lastFetchFlag = false;
@@ -38,6 +46,7 @@ const fetcher = () => {
     getMessagesList();
     getRobots();
     getToken();
+    getBaseModels();
 };
 
 // operate message
@@ -56,6 +65,7 @@ const getMessagesList = () => {
             chat.chatList = [];
         });
 };
+
 const removeChat = (chatid) => {
     conn.delete(`/chat/${chatid}`)
         .then(() => {
@@ -75,16 +85,30 @@ const getRobots = () => {
             if (typeof data === 'string') {
                 data = JSON.parse(data);
             }
-            let list = [];
-            for (let item of data) {
-                list.push(item['robot_name']);
-            }
-            robotList.value = list;
+            robotList.value = data;
         })
         .catch(err => {
             toaster.show('Failed to query robot list', {type: 'error'});
             robotList.value = [];
         });
+};
+const getBaseModels = () => {
+    conn.get('/admin/robot')
+        .then(res => {
+            let data = res.data;
+            if (typeof data === 'string') {
+                data = JSON.parse(data);
+            }
+            baseModelList.value = data;
+        })
+        .catch(err => {
+            toaster.show('Failed to query base model list', {type: 'error'});
+            baseModelList.value = [];
+        });
+};
+const getBaseModelName = (id: string) => {
+    if (baseModelList.value.length === 0 || id === '') return '---';
+    return baseModelList.value.find(item => item.id === id)?.name;
 };
 const getRobotsSlicer = computed(() => {
     return robotList.value.slice(0, 4);
@@ -131,6 +155,65 @@ const selectRechargeOption = (option) => {
 function gotoChat() {
     router.push('/');
 }
+
+function startChatWithRobot(item: any) {
+    let formData = new FormData();
+    formData.append('model', item.base_model);
+    formData.append('prompts', item.system_prompt);
+    conn.post('/chat/new', formData)
+        .then(res => {
+            fetcher();
+            toaster.show('Chat creation success', {type: 'success'});
+            chat.current = res.data.chatid;
+        })
+        .catch(err => {
+            toaster.show('Chat title update failed', {type: 'error'});
+        });
+}
+
+function openCreateBotDialog() {
+    createBotData.value = {
+        base_model_id: '',
+        system_prompt: '',
+        knowledge_base: '',
+        price: 0,
+        quota: 0,
+        icon: '',
+    };
+    createBotDialog.value = true;
+}
+
+function inputFile(event) {
+    robotIconName.value = event.target.files[0].name;
+    let fileReader = new FileReader();
+    fileReader.readAsDataURL(event.target.files[0]);
+    fileReader.onload = function (e) {
+        createBotData.value.icon = e.target.result as string;
+    };
+}
+
+function submitBotCreation() {
+    let formData = new FormData();
+    if (createBotData.value.base_model_id === '' || createBotData.value.system_prompt === '' || createBotData.value.price === 0) {
+        toaster.show('Please fill in the required fields', {type: 'warning'});
+        return;
+    }
+    formData.append('base_model_id', createBotData.value.base_model_id);
+    formData.append('system_prompt', createBotData.value.system_prompt);
+    formData.append('knowledge_base', createBotData.value.knowledge_base);
+    formData.append('price', createBotData.value.price.toString());
+    formData.append('quota', createBotData.value.quota.toString());
+    formData.append('icon', createBotData.value.icon);
+    conn.post('/robot/new', formData)
+        .then(res => {
+            createBotDialog.value = false;
+            toaster.show('Bot creation success', {type: 'success'});
+            fetcher();
+        })
+        .catch(err => {
+            toaster.show('Bot creation failed', {type: 'error'});
+        });
+}
 </script>
 
 
@@ -167,29 +250,36 @@ function gotoChat() {
                              class="text-xs el-select-dropdown__item h-fit mt-0.5 p-1 pl-0.5"
                              v-on:mouseenter="addHoverClass"
                              v-on:mouseleave="removeHoverClass" v-on:mousedown="addActiveClass"
-                             v-on:mouseup="removeActiveClass" @click="todo">
-                            - {{ item }}
+                             v-on:mouseup="removeActiveClass" @click="startChatWithRobot(item)">
+                            - {{ item?.robot_name }}
                         </div>
+                        <el-dropdown placement="bottom" class="!w-full" :disabled="robotList.length < 5">
+                            <div
+                                class="text-xs el-select-dropdown__item h-fit mt-0.5 p-1 pl-0.5"
+                                v-on:mouseenter="addHoverClass"
+                                v-on:mouseleave="removeHoverClass" v-on:mousedown="addActiveClass"
+                                v-on:mouseup="removeActiveClass">
+                                - More ...
+                            </div>
+                            <template #dropdown>
+                                <el-dropdown-menu>
+                                    <el-dropdown-item v-for="item in getRobotRest" @click="startChatWithRobot(item)">
+                                        {{ item?.robot_name }}
+                                    </el-dropdown-item>
+                                </el-dropdown-menu>
+                            </template>
+                        </el-dropdown>
                     </div>
                 </div>
             </el-card>
             <div class="grid grid-cols-2">
                 <div class="pr-1">
-                    <el-dropdown placement="bottom" class="!w-full mt-2" :disabled="robotList.length < 5">
-                        <el-button class="w-full">
-                            <el-icon>
-                                <More/>
-                            </el-icon>
-                            <span class="ml-2">More</span>
-                        </el-button>
-                        <template #dropdown>
-                            <el-dropdown-menu>
-                                <el-dropdown-item v-for="item in getRobotRest" @click="todo">
-                                    {{ item }}
-                                </el-dropdown-item>
-                            </el-dropdown-menu>
-                        </template>
-                    </el-dropdown>
+                    <el-button class="w-full mt-2" @click="openCreateBotDialog">
+                        <el-icon>
+                            <Plus/>
+                        </el-icon>
+                        <span class="ml-2">Create bot</span>
+                    </el-button>
                 </div>
 
                 <div class="pl-1">
@@ -240,6 +330,66 @@ function gotoChat() {
             <el-button @click="addToken">Buy More</el-button>
         </div>
     </div>
+
+    <!-- charge dialog -->
+    <el-dialog
+        title="Create new bot"
+        v-model="createBotDialog"
+        width="700px"
+        center
+    >
+        <el-form label-width="auto" v-model="createBotData">
+            <el-form-item label="Base Model" required>
+                <el-dropdown>
+                    <span class="el-dropdown-link select-none">
+                      {{ getBaseModelName(createBotData.base_model_id) }}
+                      <el-icon class="el-icon--right">
+                        <arrow-down/>
+                      </el-icon>
+                    </span>
+                    <template #dropdown>
+                        <el-dropdown-menu slot="dropdown">
+                            <el-dropdown-item v-for="item in baseModelList" :key="item.id" :value="item.id"
+                                              @click="createBotData.base_model_id = item.id">
+                                {{ item.name }}
+                            </el-dropdown-item>
+                        </el-dropdown-menu>
+                    </template>
+                </el-dropdown>
+            </el-form-item>
+            <el-form-item label="System Prompt" required>
+                <el-input v-model="createBotData.system_prompt" type="textarea"
+                          placeholder="Input your system prompt here" :autosize="{ minRows: 3, maxRows: 8 }"/>
+            </el-form-item>
+            <el-form-item label="Knowledge Base">
+                <el-input v-model="createBotData.knowledge_base" placeholder="Input knowledge base id here"/>
+            </el-form-item>
+            <el-form-item label="Price" required>
+                <el-input v-model="createBotData.price" type="number"/>
+                <p class="text-gray-500 text-xs mt-1">How much NINJA token worth a this robot's token</p>
+            </el-form-item>
+            <el-form-item label="Quota">
+                <el-input v-model="createBotData.quota" type="number"/>
+                <p class="text-gray-500 text-xs mt-1">Input the maximum NINJA token the user can use</p>
+            </el-form-item>
+            <el-form-item label="Icon">
+                <el-button>
+                    Select a file
+                    <input type="file" v-on:change="inputFile" accept="image/*"
+                           class="opacity-0 absolute top-0 right-0 left-0 bottom-0 !cursor-pointer"/>
+                </el-button>
+                <span class="ml-2.5 text-gray-500">{{ robotIconName }}</span>
+            </el-form-item>
+        </el-form>
+        <template #footer>
+            <div class="dialog-footer text-right">
+                <el-button @click="createBotDialog = false">Cancel</el-button>
+                <el-button type="primary" @click="submitBotCreation">
+                    Confirm
+                </el-button>
+            </div>
+        </template>
+    </el-dialog>
 
     <!-- charge dialog -->
     <el-dialog

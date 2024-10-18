@@ -542,7 +542,7 @@ onMounted(() => {
         <!-- Robots Section -->
         <div class="mt-8">
             <h3 class="text-lg font-semibold">Robots</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <ElCard
                     v-for="(robot, index) in robots"
                     :key="index"
@@ -568,7 +568,7 @@ onMounted(() => {
         <!-- Posts Section -->
         <div class="mt-8">
             <h3 class="text-lg font-semibold">Posts</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <ElCard v-for="(post, index) in posts" :key="index" class="mb-4" shadow="hover">
                     <div class="flex items-center mb-2">
                         <ElAvatar :src="post.icon" size="small"/>
@@ -695,7 +695,10 @@ onMounted(() => {
                     {{ getTimeString(chat.time) }}
                   </span>
                                 </div>
-                                <p>{{ chat.content }}</p>
+                                <el-card shadow="never" class="ml-3 mr-3 text-sm w-fit user-dialog-chat"
+                                         :class="chat.userid === global.uuid ? 'bg-blue-50' : 'bg-neutral-50'">
+                                    {{ chat.content }}
+                                </el-card>
                             </div>
                         </ElScrollbar>
                         <!-- Reply input box -->

@@ -383,7 +383,7 @@ function isLastAssistantMsg(role: string, index: number) {
     <RatePanel :robotid="robotid" :userid="global.uuid"/>
     <el-dialog v-model="global.dialogs.multimodal"
                :title="'Multimodal: ' + firstUpperCase(multimodalType)" width="50%">
-        <el-form>
+        <el-form label-width="auto">
             <el-form-item label="File" v-if="multimodalType !== 'voice'">
                 <el-button>
                     Select a file
