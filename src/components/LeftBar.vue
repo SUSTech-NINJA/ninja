@@ -52,18 +52,18 @@ const getMessagesList = () => {
             fetchFlag.value = !fetchFlag.value;
         })
         .catch(err => {
-            toaster.show('查询聊天列表失败', {type: 'error'});
+            toaster.show('Failed to query chat list', {type: 'error'});
             chat.chatList = [];
         });
 };
 const removeChat = (chatid) => {
     conn.delete(`/chat/${chatid}`)
         .then(() => {
-            toaster.show('聊天删除成功', {type: 'success'});
+            toaster.show('Chat deletion success', {type: 'success'});
             fetcher();
         })
         .catch(err => {
-            toaster.show('删除聊天失败', {type: 'error'});
+            toaster.show('Failed to delete the chat', {type: 'error'});
         });
 };
 
@@ -82,7 +82,7 @@ const getRobots = () => {
             robotList.value = list;
         })
         .catch(err => {
-            toaster.show('查询机器人列表失败', {type: 'error'});
+            toaster.show('Failed to query robot list', {type: 'error'});
             robotList.value = [];
         });
 };
@@ -105,7 +105,7 @@ const getToken = () => {
             token.value = data.current;
         })
         .catch(err => {
-            toaster.show('查询 Token 数量失败', {type: 'error'});
+            toaster.show('Failed to query token quantity', {type: 'error'});
             token.value = -1;
         });
 };
@@ -121,10 +121,10 @@ const selectRechargeOption = (option) => {
         .then(res => {
             token.value = newTokenAmount;
             showRechargeDialog.value = false;
-            toaster.show('充值成功', {type: 'success'});
+            toaster.show('Payment success', {type: 'success'});
         })
         .catch(err => {
-            toaster.show('充值失败', {type: 'error'});
+            toaster.show('Failed to pay', {type: 'error'});
         });
 };
 

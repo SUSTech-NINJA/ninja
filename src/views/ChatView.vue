@@ -17,7 +17,7 @@ const fetchFlag = ref(false), messages = ref([]), chatInput = ref(''),
     robotid = ref(''), baseModel = ref(''), robotInfo = ref({}),
     editingCur = ref(false), titleEditing = ref(""), isSingleRound = ref(false),
     isOptimizingPrompt = ref(false), multimodalType = ref(''),
-    files = ref([]), newFile = ref(null), newFileName = ref('');
+    files = ref([]), newFile = ref(null), newFileName = ref(''), suggestions = ref([]);
 
 onMounted(() => fetcher());
 let lastFetchFlag = false;
@@ -29,6 +29,7 @@ chat.$subscribe(() => {
 
 const fetcher = () => {
     getMessages();
+    getSuggestions();
     files.value = [];
 };
 
@@ -118,6 +119,21 @@ function clearContext() {
         })
         .catch(err => {
             toaster.show('Context clear failed', {type: 'error'});
+        });
+}
+
+function getSuggestions() {
+    conn.get('/chat/suggestions/' + chat.current)
+        .then(res => {
+            let data = res.data;
+            if (typeof data === 'string') {
+                data = JSON.parse(data);
+            }
+            suggestions.value = data;
+        })
+        .catch(err => {
+            toaster.show('Query chat list failed', {type: 'error'});
+            messages.value = [];
         });
 }
 
@@ -241,11 +257,23 @@ function submitFile() {
     } as FileInfo);
     global.dialogs.multimodal = false;
 }
+
+function isLastAssistantMsg(role: string, index: number) {
+    if (role !== 'assistant') return false;
+    else {
+        for (let i = messages.value.length - 1; i >= index; i--) {
+            if (messages.value[i].role === 'assistant') {
+                return i === index;
+            }
+        }
+        return false;
+    }
+}
 </script>
 
 <template>
     <div class="p-6 w-full h-full flex items-center"
-        v-if="chat.current === '' || chat.chatList.length === 0 || curChat === null || typeof curChat == 'undefined'">
+         v-if="chat.current === '' || chat.chatList.length === 0 || curChat === null || typeof curChat == 'undefined'">
         <div class="h-fit w-full text-gray-500">
             Select a chat from left to start messaging.
         </div>
@@ -256,17 +284,17 @@ function submitFile() {
                 <h1 class="text-xl font-bold inline-block" v-if="!editingCur">
                     {{ curChat?.title }}
                 </h1>
-                <el-input v-model="titleEditing" v-else class="w-1/2" />
+                <el-input v-model="titleEditing" v-else class="w-1/2"/>
                 <p class="text-sm text-gray-500 inline-block ml-1.5">
                     {{ getRobotName() }}
                 </p>
             </div>
             <div class="text-right">
                 <el-button :icon="editingCur ? Check : EditPen" @click="editCur" circle class="mr-3"
-                    title="Edit Conversation" />
-                <el-button :icon="Delete" @click="clearContext" circle class="mr-3" title="Clear Context" />
+                           title="Edit Conversation"/>
+                <el-button :icon="Delete" @click="clearContext" circle class="mr-3" title="Clear Context"/>
                 <el-dropdown>
-                    <el-button :icon="More" title="More" circle />
+                    <el-button :icon="More" title="More" circle/>
                     <template #dropdown>
                         <el-dropdown-menu>
                             <el-dropdown-item @click="openRateDialog">Rate the robot</el-dropdown-item>
@@ -276,31 +304,43 @@ function submitFile() {
             </div>
         </div>
         <div class="grow overflow-scroll">
-            <div v-for="item in messages" v-show="item.role !== 'system'" :key="item.id" class="flex flex-col mb-4">
-                <div class="flex items-center" :class="item.role === 'user' ? 'flex-row-reverse' : ''">
-                    <div class="w-8 h-8 rounded-full flex items-center justify-center"
-                        :class="item.role === 'user' ? 'bg-blue-100' : 'bg-zinc-100'">
+            <div v-for="(item, index) in messages" v-show="item.role !== 'system'" :key="item.id"
+                 class="flex flex-col mb-4">
+                <div class="flex" :class="item.role === 'user' ? 'flex-row-reverse' : ''">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center mt-2"
+                         :class="item.role === 'user' ? 'bg-blue-100 mr-1.5' : 'bg-zinc-100 ml-1'">
                         <el-icon>
                             <template v-if="item.role === 'user'">
-                                <User />
+                                <User/>
                             </template>
                             <template v-else>
-                                <Cpu />
+                                <Cpu/>
                             </template>
                         </el-icon>
                     </div>
-                    <el-card shadow="never" class="ml-3 mr-3 text-sm"
-                        :class="item.role === 'user' ? 'bg-blue-50' : 'bg-neutral-50'">
-                        {{ item.content }}
-                    </el-card>
+                    <div>
+                        <el-card shadow="never" class="ml-3 mr-3 text-sm w-fit"
+                                 :class="item.role === 'user' ? 'bg-blue-50' : 'bg-neutral-50'">
+                            {{ item.content }}
+                        </el-card>
+                        <div class="text-xs text-gray-500 text-left ml-3 mr-3"
+                             v-if="isLastAssistantMsg(item.role, index)">
+                            <div v-for="(suggest, index) in suggestions" :key="index">
+                                <el-check-tag type="info" size="small" class="mt-2 !text-xs !p-1.5 !font-normal">{{
+                                        suggest
+                                    }}
+                                </el-check-tag>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
         <div class="flex-none flex flex-col">
             <div class="w-full">
                 <el-input type="textarea" v-loading="isOptimizingPrompt" v-model="chatInput"
-                    :autosize="{ minRows: 2, maxRows: 6 }"
-                    placeholder="Type a message" class="w-full" />
+                          :autosize="{ minRows: 2, maxRows: 6 }"
+                          placeholder="Type a message" class="w-full"/>
             </div>
             <div class="w-full mt-2.5 grid grid-cols-2">
                 <div class="text-left">
@@ -311,7 +351,7 @@ function submitFile() {
                         <el-button type="text">
                             Multimodal{{ files.length > 0 ? ': ' + files.length + ' files' : '' }}
                             <el-icon class="el-icon--right">
-                                <ArrowDown />
+                                <ArrowDown/>
                             </el-icon>
                         </el-button>
                         <template #dropdown>
@@ -320,11 +360,11 @@ function submitFile() {
                                     <span class="text-sm">Click to remove:</span>
                                 </el-dropdown-item>
                                 <el-dropdown-item v-for="(file, index) in files"
-                                    @click="removeFile(file.name)" :key="index">
+                                                  @click="removeFile(file.name)" :key="index">
                                     {{ file.name }}
                                 </el-dropdown-item>
                                 <el-dropdown-item :divided="files.length > 0"
-                                    @click="openMultimodalDialog('file')">Add
+                                                  @click="openMultimodalDialog('file')">Add
                                     a file
                                 </el-dropdown-item>
                                 <el-dropdown-item @click="openMultimodalDialog('image')">Add an image</el-dropdown-item>
@@ -340,20 +380,20 @@ function submitFile() {
             </div>
         </div>
     </div>
-    <RatePanel :robotid="robotid" :userid="global.uuid" />
+    <RatePanel :robotid="robotid" :userid="global.uuid"/>
     <el-dialog v-model="global.dialogs.multimodal"
-        :title="'Multimodal: ' + firstUpperCase(multimodalType)" width="50%">
+               :title="'Multimodal: ' + firstUpperCase(multimodalType)" width="50%">
         <el-form>
             <el-form-item label="File" v-if="multimodalType !== 'voice'">
                 <el-button>
                     Select a file
                     <input type="file" v-on:change="inputFile" :accept="multimodalType === 'image' ? 'image/*' : '*/*'"
-                        class="opacity-0 absolute top-0 right-0 left-0 bottom-0 !cursor-pointer" />
+                           class="opacity-0 absolute top-0 right-0 left-0 bottom-0 !cursor-pointer"/>
                 </el-button>
                 <span class="ml-2.5 text-gray-500">{{ newFileName }}</span>
             </el-form-item>
             <el-form-item label="Preview" v-if="multimodalType === 'image' && newFile != null">
-                <el-image :src="newFile" />
+                <el-image :src="newFile"/>
             </el-form-item>
             <el-form-item label="Record Now" v-if="multimodalType === 'voice'">
                 <el-button @click="startRecord">Start</el-button>
@@ -361,7 +401,7 @@ function submitFile() {
                 <span class="ml-2.5 text-gray-500">{{ getParsedDuration }}</span>
             </el-form-item>
             <el-form-item label="Recorded Voice" v-if="multimodalType === 'voice' && newFile != null">
-                <audio :src="newFile" controls />
+                <audio :src="newFile" controls/>
             </el-form-item>
         </el-form>
         <p class="text-sm text-gray-500">To save tokens, only files <100kb are allowed. </p>
