@@ -5,13 +5,13 @@ This is the frontend for the NINJA project.
 ## Usage
 
 ```bash
-yarn run install
+yarn
 yarn run dev
 ```
 
 ## Technologies
 
-- Vue, Vite, Pinia, Typescript
+- Vue, Vite, Pinia, TypeScript
 - TailwindCSS, Element Plus
 - Tauri
 
@@ -25,6 +25,7 @@ the [Tauri Prerequisites](https://v1.tauri.app/v1/guides/getting-started/prerequ
 ### Tauri for your platform
 
 ```bash
+yarn
 yarn run tauri dev
 ```
 
