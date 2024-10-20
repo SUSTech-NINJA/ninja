@@ -629,7 +629,7 @@ onMounted(() => {
             </template>
             <template #footer>
                 <ElButton @click="showRobotRateModal = true">
-                    Rate this user
+                    Rate this robot
                 </ElButton>
                 <ElButton @click="showRobotModal = false">Close</ElButton>
             </template>
