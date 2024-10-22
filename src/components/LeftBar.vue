@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {useChatStore} from "../stores/chat";
 import {computed, onMounted, ref, watch} from "vue";
-import {ArrowDown, Close, MagicStick, Plus, Search, Setting, User} from "@element-plus/icons-vue";
+import {ArrowDown, Close, MagicStick, Plus, Search, Setting, User,Avatar} from "@element-plus/icons-vue";
 import {addActiveClass, addHoverClass, getTimeString, removeActiveClass, removeHoverClass} from "../util";
 import {createConnection, toasterOptions} from "../config";
 import {createToaster} from "@meforma/vue-toaster";
@@ -447,7 +447,7 @@ async function fetchUserInfo() {
                     <el-button :icon="User" circle/>
                 </router-link>
                 <router-link to="/settings">
-                    <el-button :icon="Setting" circle/>
+                    <el-button :icon="Avatar" circle/>
                 </router-link>
             </div>
         </div>
