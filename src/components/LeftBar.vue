@@ -14,7 +14,7 @@ const router = useRouter();
 const route = useRoute();
 
 const searchInput = ref("");
-const token = ref(-1);
+const coin = ref(-1);
 const fetchFlag = ref(false);
 const robotList = ref([]), baseModelList = ref([]);
 const conn = createConnection();
@@ -22,12 +22,12 @@ const toaster = createToaster(toasterOptions);
 
 const showRechargeDialog = ref(false), createBotDialog = ref(false);
 const rechargeOptions = ref([
-    {price: 6, tokens: 60},
-    {price: 30, tokens: 300},
-    {price: 98, tokens: 1090},
-    {price: 198, tokens: 2240},
-    {price: 328, tokens: 3880},
-    {price: 648, tokens: 8080},
+    {price: 6, coins: 60},
+    {price: 30, coins: 300},
+    {price: 98, coins: 1090},
+    {price: 198, coins: 2240},
+    {price: 328, coins: 3880},
+    {price: 648, coins: 8080},
 ]);
 const createBotData = ref({
     base_model_id: '',
@@ -174,11 +174,11 @@ const getToken = () => {
             if (typeof data === 'string') {
                 data = JSON.parse(data);
             }
-            token.value = data.current;
+            coin.value = data.current;
         })
         .catch(err => {
-            toaster.show('Failed to query token quantity', {type: 'error'});
-            token.value = -1;
+            toaster.show('Failed to query coin quantity', {type: 'error'});
+            coin.value = -1;
         });
 };
 const addToken = () => {
@@ -188,10 +188,10 @@ const cancelRecharge = () => {
     showRechargeDialog.value = false;
 };
 const selectRechargeOption = (option) => {
-    const newTokenAmount = token.value + option.tokens;
+    const newTokenAmount = coin.value + option.coins;
     conn.post('/shop/buy_package', {result: newTokenAmount})
         .then(res => {
-            token.value = newTokenAmount;
+            coin.value = newTokenAmount;
             showRechargeDialog.value = false;
             toaster.show('Payment success', {type: 'success'});
         })
@@ -447,7 +447,7 @@ async function fetchUserInfo() {
                     <el-button :icon="User" circle/>
                 </router-link>
                 <router-link to="/settings">
-                    <el-button :icon="Avatar" circle/>
+                    <el-button :icon="Setting" circle/>
                 </router-link>
             </div>
         </div>
@@ -534,7 +534,7 @@ async function fetchUserInfo() {
 
     <div class="flex-none w-full grid grid-cols-2 items-center">
         <div class="text-left text-sm fit-content">
-            Current tokens: {{ token }}
+            Current coins: {{ coin }}
         </div>
         <div class="text-right">
             <el-button @click="addToken">Buy More</el-button>
@@ -743,11 +743,11 @@ async function fetchUserInfo() {
             </el-form-item>
             <el-form-item label="Price" required>
                 <el-input v-model="createBotData.price" type="number"/>
-                <p class="text-gray-500 text-xs mt-1">How much NINJA token worth a this robot's token</p>
+                <p class="text-gray-500 text-xs mt-1">How much NINJA coin worth a this robot's coin</p>
             </el-form-item>
             <el-form-item label="Quota">
                 <el-input v-model="createBotData.quota" type="number"/>
-                <p class="text-gray-500 text-xs mt-1">Input the maximum NINJA token the user can use</p>
+                <p class="text-gray-500 text-xs mt-1">Input the maximum NINJA coin the user can use</p>
             </el-form-item>
             <el-form-item label="Icon">
                 <el-button>
@@ -770,14 +770,14 @@ async function fetchUserInfo() {
 
     <!-- Recharge Dialog -->
     <el-dialog
-        title="Recharge Tokens"
+        title="Recharge Coins"
         v-model="showRechargeDialog"
         width="700px"
         center
     >
-        <!-- remain tokens -->
+        <!-- remain coins -->
         <div class="text-center mb-4">
-            <p class="text-lg font-bold">Current Tokens: {{ token }}</p>
+            <p class="text-lg font-bold">Current Coins: {{ coin }}</p>
         </div>
 
         <div class="grid grid-cols-2 gap-4"> <!-- charge options -->
@@ -788,7 +788,7 @@ async function fetchUserInfo() {
                 @click="selectRechargeOption(option)"
             >
                 <p class="text-xl font-bold">{{ option.price }}$</p>
-                <p class="text-sm text-gray-500">{{ option.tokens }} Tokens</p>
+                <p class="text-sm text-gray-500">{{ option.coins }} Coins</p>
             </el-card>
         </div>
 

@@ -6,7 +6,7 @@ import {Close} from "@element-plus/icons-vue";
     <div class="p-6 w-full h-full">
         <div class="grid grid-cols-3 w-full mb-4">
             <div class="col-span-2 text-left">
-                <h1 class="text-xl font-bold">Settings</h1>
+                <h1 class="text-xl font-bold">Administrator Settings</h1>
             </div>
             <div class="text-right">
                 <router-link to="/">
