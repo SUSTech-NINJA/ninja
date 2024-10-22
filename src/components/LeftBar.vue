@@ -30,7 +30,7 @@ const rechargeOptions = ref([
     {price: 648, coins: 8080},
 ]);
 const createBotData = ref({
-    name:''
+    name: '',
     base_model_id: '',
     system_prompt: '',
     knowledge_base: '',
