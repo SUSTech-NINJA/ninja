@@ -139,11 +139,9 @@ function getSuggestions() {
 
 function optimizePrompt() {
     isOptimizingPrompt.value = true;
-    conn.get('/chat/optimize', {
-        params: {
-            'text': chatInput.value
-        }
-    })
+    let formData = new FormData();
+    formData.append('text', chatInput.value);
+    conn.post('/chat/optimize', formData)
         .then(res => {
             toaster.show('Prompt optimized', {type: 'success'});
             chatInput.value = res.data;

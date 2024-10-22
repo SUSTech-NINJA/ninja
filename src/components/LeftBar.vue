@@ -675,7 +675,7 @@ async function fetchUserInfo() {
     <el-dialog
         v-model="showUserModal"
         :title="selectedUser && selectedUser.UserInfo.name + ' Profile'"
-        width="30%"
+        width="40%"
     >
         <div class="text-center">
             <el-avatar :src="selectedUser && selectedUser.UserInfo.icon" size="large"/>
@@ -687,7 +687,7 @@ async function fetchUserInfo() {
             </p>
         </div>
         <template #footer>
-            <el-button @click="showRateDialog = true">Rate this user</el-button>
+            <el-button @click="showRateDialog = true">Rate user</el-button>
             <el-button @click="goToUserProfile">Go to Profile</el-button>
             <el-button @click="closeUserModal">Close</el-button>
         </template>
