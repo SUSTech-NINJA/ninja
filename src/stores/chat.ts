@@ -16,8 +16,8 @@ export type FileInfo = {
 export const useChatStore = defineStore('chat', {
     state: () => ({
         current: "",
-        msgList: {},
-        chatList: [],
+        msgList: {} as any,
+        chatList: [] as any[],
     }),
     persist: {debug: true}
 });

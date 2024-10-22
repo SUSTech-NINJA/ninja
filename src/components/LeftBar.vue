@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {useChatStore} from "../stores/chat";
 import {computed, onMounted, ref, watch} from "vue";
-import {ArrowDown, Close, MagicStick, Plus, Search, Setting, User,Avatar} from "@element-plus/icons-vue";
+import {ArrowDown, Close, MagicStick, Plus, Search, Setting, User} from "@element-plus/icons-vue";
 import {addActiveClass, addHoverClass, getTimeString, removeActiveClass, removeHoverClass} from "../util";
 import {createConnection, toasterOptions} from "../config";
 import {createToaster} from "@meforma/vue-toaster";
@@ -16,7 +16,7 @@ const route = useRoute();
 const searchInput = ref("");
 const coin = ref(-1);
 const fetchFlag = ref(false);
-const robotList = ref([]), baseModelList = ref([]);
+const robotList = ref([] as any[]), baseModelList = ref([] as any[]);
 const conn = createConnection();
 const toaster = createToaster(toasterOptions);
 
@@ -30,6 +30,7 @@ const rechargeOptions = ref([
     {price: 648, coins: 8080},
 ]);
 const createBotData = ref({
+    name:''
     base_model_id: '',
     system_prompt: '',
     knowledge_base: '',
@@ -42,10 +43,10 @@ const showSearchDialog = ref(false);
 const searchType = ref(''); // 'robot' or 'user'
 const searchBy = ref(''); // 'id' or 'name' for robots, 'uuid' or 'username' for users
 const searchQuery = ref('');
-const searchResults = ref([]);
+const searchResults = ref([] as any);
 const showSearchResultsDialog = ref(false);
-const selectedRobot = ref(null);
-const selectedUser = ref(null);
+const selectedRobot = ref<any>();
+const selectedUser = ref<any>();
 const showRobotModal = ref(false);
 const showUserModal = ref(false);
 
@@ -109,19 +110,19 @@ const getMessagesList = () => {
             chat.chatList = data;
             fetchFlag.value = !fetchFlag.value;
         })
-        .catch(err => {
+        .catch(_err => {
             toaster.show('Failed to query chat list', {type: 'error'});
             chat.chatList = [];
         });
 };
 
-const removeChat = (chatid) => {
+const removeChat = (chatid: any) => {
     conn.delete(`/chat/${chatid}`)
         .then(() => {
             toaster.show('Chat deletion success', {type: 'success'});
             fetcher();
         })
-        .catch(err => {
+        .catch(_err => {
             toaster.show('Failed to delete the chat', {type: 'error'});
         });
 };
@@ -136,7 +137,7 @@ const getRobots = () => {
             }
             robotList.value = data;
         })
-        .catch(err => {
+        .catch(_err => {
             toaster.show('Failed to query robot list', {type: 'error'});
             robotList.value = [];
         });
@@ -150,7 +151,7 @@ const getBaseModels = () => {
             }
             baseModelList.value = data;
         })
-        .catch(err => {
+        .catch(_err => {
             toaster.show('Failed to query base model list', {type: 'error'});
             baseModelList.value = [];
         });
@@ -176,7 +177,7 @@ const getToken = () => {
             }
             coin.value = data.current;
         })
-        .catch(err => {
+        .catch(_err => {
             toaster.show('Failed to query coin quantity', {type: 'error'});
             coin.value = -1;
         });
@@ -187,15 +188,15 @@ const addToken = () => {
 const cancelRecharge = () => {
     showRechargeDialog.value = false;
 };
-const selectRechargeOption = (option) => {
+const selectRechargeOption = (option: any) => {
     const newTokenAmount = coin.value + option.coins;
     conn.post('/shop/buy_package', {result: newTokenAmount})
-        .then(res => {
+        .then(_res => {
             coin.value = newTokenAmount;
             showRechargeDialog.value = false;
             toaster.show('Payment success', {type: 'success'});
         })
-        .catch(err => {
+        .catch(_err => {
             toaster.show('Failed to pay', {type: 'error'});
         });
 };
@@ -215,13 +216,14 @@ function startChatWithRobot(item: any) {
             chat.current = res.data.chatid;
             gotoChat();
         })
-        .catch(err => {
+        .catch(_err => {
             toaster.show('Chat creation failed', {type: 'error'});
         });
 }
 
 function openCreateBotDialog() {
     createBotData.value = {
+        name: '',
         base_model_id: '',
         system_prompt: '',
         knowledge_base: '',
@@ -232,12 +234,12 @@ function openCreateBotDialog() {
     createBotDialog.value = true;
 }
 
-function inputFile(event) {
+function inputFile(event: any) {
     robotIconName.value = event.target.files[0].name;
     let fileReader = new FileReader();
     fileReader.readAsDataURL(event.target.files[0]);
     fileReader.onload = function (e) {
-        createBotData.value.icon = e.target.result as string;
+        createBotData.value.icon = e.target?.result as string;
     };
 }
 
@@ -247,6 +249,7 @@ function submitBotCreation() {
         toaster.show('Please fill in the required fields', {type: 'warning'});
         return;
     }
+    formData.append('name', createBotData.value.name);
     formData.append('base_model_id', createBotData.value.base_model_id);
     formData.append('system_prompt', createBotData.value.system_prompt);
     formData.append('knowledge_base', createBotData.value.knowledge_base);
@@ -254,12 +257,12 @@ function submitBotCreation() {
     formData.append('quota', createBotData.value.quota.toString());
     formData.append('icon', createBotData.value.icon);
     conn.post('/robot/new', formData)
-        .then(res => {
+        .then(_res => {
             createBotDialog.value = false;
             toaster.show('Bot creation success', {type: 'success'});
             fetcher();
         })
-        .catch(err => {
+        .catch(_err => {
             toaster.show('Bot creation failed', {type: 'error'});
         });
 }
@@ -291,7 +294,7 @@ function performSearch() {
     }
     conn.get(url, {params})
         .then(res => {
-            let data = res.data;
+            let data: any = res.data;
             if (typeof data === 'string') {
                 data = JSON.parse(data);
             }
@@ -303,12 +306,12 @@ function performSearch() {
             showSearchDialog.value = false;
             showSearchResultsDialog.value = true;
         })
-        .catch(err => {
+        .catch(_err => {
             toaster.show('Failed to search', {type: 'error'});
         });
 }
 
-function handleResultClick(item) {
+function handleResultClick(item: any) {
     if (searchType.value === 'robot') {
         getRobotInfo(item.robotid);
     } else if (searchType.value === 'user') {
@@ -317,7 +320,7 @@ function handleResultClick(item) {
 }
 
 // 获取机器人信息并展示
-function getRobotInfo(robotid) {
+function getRobotInfo(robotid: string) {
     conn.get(`/robot/${robotid}`)
         .then(res => {
             let data = res.data.info;
@@ -325,13 +328,13 @@ function getRobotInfo(robotid) {
             showRobotModal.value = true;
             showSearchResultsDialog.value = false;
         })
-        .catch(err => {
+        .catch(_err => {
             toaster.show('Failed to get robot info', {type: 'error'});
         });
 }
 
 // 获取用户信息并展示
-function getUserInfo(uuid) {
+function getUserInfo(uuid: string) {
     conn.get(`/user/${uuid}`)
         .then(res => {
             let data = res.data;
@@ -349,7 +352,7 @@ function getUserInfo(uuid) {
             showUserModal.value = true;
             showSearchResultsDialog.value = false;
         })
-        .catch(err => {
+        .catch(_err => {
             toaster.show('Failed to get user info', {type: 'error'});
         });
 }
@@ -372,15 +375,15 @@ function rateRobot() {
         rate: robotRating.value,
         userid: global.uuid,
     };
-    conn.post(`/robot/post/${selectedRobot.value.robotid}`, payload)
-        .then(res => {
+    conn.post(`/robot/post/${selectedRobot.value?.robotid}`, payload)
+        .then(_res => {
             toaster.show('Rating submitted successfully', {type: 'success'});
             robotComment.value = '';
             robotRating.value = 0;
             showRobotRateModal.value = false;
-            getRobotInfo(selectedRobot.value.robotid); // 刷新机器人信息
+            getRobotInfo(selectedRobot.value?.robotid); // 刷新机器人信息
         })
-        .catch(err => {
+        .catch(_err => {
             toaster.show('Failed to submit rating', {type: 'error'});
         });
 }
@@ -397,12 +400,12 @@ function rateUser() {
     conn.post(`/evaluate_user/${userInfo.value.uuid}`, {
         rate: newRating.value,
     })
-        .then(res => {
+        .then(_res => {
             toaster.show('Rating sent successfully', {type: 'success'});
             showRateDialog.value = false;
             getUserInfo(userInfo.value.uuid); // 刷新用户信息
         })
-        .catch(err => {
+        .catch(_err => {
             toaster.show('Failed to send rating', {type: 'error'});
         });
 }
@@ -714,6 +717,9 @@ async function fetchUserInfo() {
         center
     >
         <el-form label-width="auto" v-model="createBotData">
+            <el-form-item lebel="Name" required>
+                <el-input v-model="createBotData.name" placeholder="Input your bot name"/>
+            </el-form-item>
             <el-form-item label="Base Model" required>
                 <el-dropdown>
                     <span class="el-dropdown-link select-none">
@@ -724,9 +730,10 @@ async function fetchUserInfo() {
                     </span>
                     <template #dropdown>
                         <el-dropdown-menu slot="dropdown">
-                            <el-dropdown-item v-for="item in baseModelList" :key="item.id" :value="item.id"
-                                              @click="createBotData.base_model_id = item.id">
-                                {{ item.name }}
+                            <el-dropdown-item v-for="item in baseModelList" :key="(item as any).id"
+                                              :value="(item as any).id"
+                                              @click="createBotData.base_model_id = (item as any).id">
+                                {{ (item as any).name }}
                             </el-dropdown-item>
                         </el-dropdown-menu>
                     </template>
@@ -741,7 +748,7 @@ async function fetchUserInfo() {
             </el-form-item>
             <el-form-item label="Price" required>
                 <el-input v-model="createBotData.price" type="number"/>
-                <p class="text-gray-500 text-xs mt-1">How much NINJA coin worth a this robot's coin</p>
+                <p class="text-gray-500 text-xs mt-1">How much NINJA coin worth 1000 this robot's token</p>
             </el-form-item>
             <el-form-item label="Quota">
                 <el-input v-model="createBotData.quota" type="number"/>
