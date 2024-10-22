@@ -25,6 +25,8 @@ declare module 'vue' {
     ElRadio: typeof import('element-plus/es')['ElRadio']
     ElRadioGroup: typeof import('element-plus/es')['ElRadioGroup']
     ElRate: typeof import('element-plus/es')['ElRate']
+    ElTable: typeof import('element-plus/es')['ElTable']
+    ElTableColumn: typeof import('element-plus/es')['ElTableColumn']
     LeftBar: typeof import('./src/components/LeftBar.vue')['default']
     LoginPanel: typeof import('./src/components/LoginPanel.vue')['default']
     RatePanel: typeof import('./src/components/RatePanel.vue')['default']

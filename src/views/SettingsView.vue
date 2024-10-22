@@ -1,9 +1,5 @@
-<script setup lang="ts">
-import {Close} from "@element-plus/icons-vue";
-</script>
-
 <template>
-    <div class="p-6 w-full h-full">
+    <div class="settings-view p-6 w-full h-full">
         <div class="grid grid-cols-3 w-full mb-4">
             <div class="col-span-2 text-left">
                 <h1 class="text-xl font-bold">Administrator Settings</h1>
@@ -16,12 +12,159 @@ import {Close} from "@element-plus/icons-vue";
                 </router-link>
             </div>
         </div>
-        <div class="w-full">
-            TODO
+
+        <div class="table-container mb-4">
+            <h2 class="text-xl font-bold mb-2">Current Base-Model</h2>
+            <el-table
+                :data="models"
+                style="width: 100%"
+                border
+                max-height="500"
+                :header-cell-style="headerCellStyle"
+            >
+                <el-table-column
+                    prop="name"
+                    label="Model Name"
+                    width="300"
+                />
+                <el-table-column
+                    prop="tokens"
+                    label="Tokens Limit"
+                    width="150"
+                />
+                <el-table-column
+                    label="Actions"
+                    align="right"
+                >
+                        <el-button
+                            type="primary"
+                            size="small"
+                            @click="openSettingDialog(scope.row)"
+                        >
+                            Setting
+                        </el-button>
+
+                            <el-button
+                                type="danger"
+                                size="small"
+                                slot="reference"
+                                @click="deleteModel(scope.$index)"
+                            >
+                                Delete
+                            </el-button>
+                </el-table-column>
+            </el-table>
         </div>
+
+        <div class="bottom-buttons">
+            <el-button type="primary" @click="exportModelEvaluation">
+                导出Model评价
+            </el-button>
+            <el-button type="primary" @click="exportUserInfo">
+                导出用户信息
+            </el-button>
+        </div>
+
+        <!-- Setting 对话框 -->
+        <el-dialog
+            title="Model Setting"
+            :visible.sync="settingDialogVisible"
+        >
+            <p>设置内容暂未实现。</p>
+            <span slot="footer" class="dialog-footer">
+        <el-button @click="settingDialogVisible = false">Cancel</el-button>
+        <el-button type="primary" @click="settingDialogVisible = false">Confirm</el-button>
+      </span>
+        </el-dialog>
     </div>
 </template>
 
-<style scoped>
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
+import { ElMessage } from 'element-plus';
+import { Close } from "@element-plus/icons-vue";
+import axios from 'axios';
 
+
+const models = ref([]);
+
+const settingDialogVisible = ref(false);
+
+const headerCellStyle = {
+    backgroundColor: '#f5f7fa',
+    color: '#303133',
+    fontWeight: 'bold',
+};
+
+const fetchModels = () => {
+    axios.get('http://127.0.0.1:4523/m1/5188287-4853858-default/admin/robot')
+        .then(response => {
+            models.value = response.data.map(item => ({
+                name: item.name,
+                tokens: item.robotid,
+                id: item.id,
+            }));
+        })
+        .catch(error => {
+            ElMessage({
+                type: 'error',
+                message: '获取模型数据失败',
+            });
+        });
+};
+
+onMounted(() => {
+    fetchModels();
+});
+
+const openSettingDialog = (row) => {
+    settingDialogVisible.value = true;
+};
+
+const deleteModel = (index) => {
+    models.value.splice(index, 1);
+    ElMessage({
+        type: 'success',
+        message: '删除成功',
+    });
+};
+
+const exportModelEvaluation = () => {
+    ElMessage({
+        type: 'info',
+        message: '导出Model评价功能暂未实现',
+    });
+};
+
+const exportUserInfo = () => {
+    ElMessage({
+        type: 'info',
+        message: '导出用户信息功能暂未实现',
+    });
+};
+</script>
+
+<style scoped>
+.settings-view {
+    padding: 20px;
+}
+
+.table-container {
+    margin-bottom: 20px;
+}
+
+.bottom-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.el-table {
+    overflow-y: auto;
+}
+
+.el-table th.is-leaf {
+    background-color: #f5f7fa !important;
+    font-weight: bold;
+}
 </style>
