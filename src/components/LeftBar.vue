@@ -646,7 +646,6 @@ async function fetchUserInfo() {
             <el-button @click="showRobotRateModal = true">
                 Rate this robot
             </el-button>
-            <el-button @click="closeRobotModal">Close</el-button>
         </template>
     </el-dialog>
 
@@ -689,7 +688,6 @@ async function fetchUserInfo() {
         <template #footer>
             <el-button @click="showRateDialog = true">Rate user</el-button>
             <el-button @click="goToUserProfile">Go to Profile</el-button>
-            <el-button @click="closeUserModal">Close</el-button>
         </template>
     </el-dialog>
 

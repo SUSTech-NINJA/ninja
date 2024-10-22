@@ -23,11 +23,12 @@ import {createConnection} from "../config";
 const global = useGlobalStore();
 const router = useRouter();
 const route = useRoute();
-const userRateMod5 = computed(() => userInfo.value.rate % 5);
 const editMode = ref(false); // Toggle user info edit mode
 const showRobotModal = ref(false); // Toggle robot details modal
 const showMessagesModal = ref(false); // Toggle messages list modal
-const selectedRobot = ref<any>(null); // Currently selected robot data
+const showPostModal = ref(false); // Toggle post details modal
+const selectedPost = ref<any>(null), selectedPostId = ref<number>(); // Currently selected post data
+const selectedRobot = ref<any>(null), selectedRobotId = ref<number>(); // Currently selected robot data
 const robots = ref<any[]>([]); // Robot list
 const userInfo = ref({
     username: '',
@@ -47,7 +48,7 @@ const isOwnProfile = computed(() => {
 const newComment = ref('');
 const newRating = ref(0);
 
-// New post content
+// New posts content
 const newPostContent = ref('');
 
 // List of published posts
@@ -108,6 +109,20 @@ async function fetchUserInfo() {
     }
 }
 
+async function fetchPosts() {
+    try {
+        const userId = (route.params.userId as string) || global.uuid;
+        const response = await api.get(`/user/${userId}`);
+        if (response.status === 200) {
+            const data = response.data;
+            posts.value = data.post || [];
+            selectedPost.value = posts.value[selectedPostId.value];
+        }
+    } catch (error) {
+        ElMessage.error('Failed to fetch posts');
+    }
+}
+
 // Fetch current user's info
 async function fetchCurrentUserInfo() {
     try {
@@ -150,24 +165,28 @@ async function updateUserInfo() {
 }
 
 // Open messages
-async function openMessages() {
+async function fetchMessages() {
     try {
         const response = await api.get(`/conversation/${global.uuid}`);
         if (response.status === 200) {
             const data = response.data;
             messages.value = data.conversation_list || [];
-            showMessagesModal.value = true;
         }
     } catch (error) {
         ElMessage.error('Failed to fetch messages list');
     }
 }
 
+async function openMessages() {
+    await fetchMessages();
+    showMessagesModal.value = true;
+}
+
 // View chat history
 async function viewChatHistory(message: any) {
     try {
         const response = await api.get(
-            `/get_history/${global.uuid}/${message.userid}`
+            `/get_history/${message.userid}`
         );
         if (response.status === 200) {
             const data = response.data;
@@ -232,7 +251,7 @@ async function publishPost() {
             ElMessage.success('Post published successfully');
             newPostContent.value = '';
             showPostDialog.value = false;
-            // Update post list
+            // Update posts list
             await fetchUserInfo();
         } else {
             ElMessage.error('Failed to publish post');
@@ -242,8 +261,8 @@ async function publishPost() {
     }
 }
 
-// Send private message
-async function sendPrivateMessage() {
+// Send a private message
+async function sendPrivateMessage(mode: string) {
     if (newComment.value.trim() === '') {
         ElMessage.warning('Content cannot be empty');
         return;
@@ -269,6 +288,11 @@ async function sendPrivateMessage() {
             showMessageDialog.value = false;
         } else {
             ElMessage.error('Failed to send message');
+        }
+        if (mode === 'message') {
+            await fetchMessages();
+        } else if (mode === 'post') {
+            await fetchPosts();
         }
     } catch (error) {
         ElMessage.error('Failed to send message');
@@ -339,12 +363,20 @@ function toggleEditMode() {
     editMode.value = !editMode.value;
 }
 
-// Show robot details modal
-function openRobotModal(robot: any) {
-    selectedRobot.value = robot;
+// Show robots detail modal
+function openRobotModal(robotId: any) {
+    selectedRobot.value = robots.value[robotId];
+    selectedRobotId.value = robotId;
     showRobotModal.value = true;
     robotComment.value = '';
     robotRating.value = 0;
+}
+
+// Show posts detail modal
+function openPostModal(postId: any) {
+    selectedPost.value = posts.value[postId];
+    selectedPostId.value = postId;
+    showPostModal.value = true;
 }
 
 // Handle logout
@@ -355,12 +387,12 @@ function logOut() {
     global.token = '';
 }
 
-function inputFile(event) {
+function inputFile(event: any) {
     userInfo.value.filename = event.target.files[0].name;
     let fileReader = new FileReader();
     fileReader.readAsDataURL(event.target.files[0]);
     fileReader.onload = function (e) {
-        userInfo.value.avatar = e.target.result as any;
+        userInfo.value.avatar = e.target?.result as any;
     };
 }
 
@@ -517,7 +549,7 @@ onMounted(() => {
                         class="mb-4"
                     />
                     <div class="text-center">
-                        <ElButton @click="sendPrivateMessage" type="primary">
+                        <ElButton @click="sendPrivateMessage('message')" type="primary">
                             Send
                         </ElButton>
                     </div>
@@ -547,7 +579,7 @@ onMounted(() => {
                     v-for="(robot, index) in robots"
                     :key="index"
                     shadow="hover"
-                    @click="openRobotModal(robot)"
+                    @click="openRobotModal(index)"
                     class="text-left"
                 >
                     <div class="flex items-center mb-4">
@@ -569,13 +601,14 @@ onMounted(() => {
         <div class="mt-8">
             <h3 class="text-lg font-semibold">Posts</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <ElCard v-for="(post, index) in posts" :key="index" class="mb-4" shadow="hover">
+                <ElCard v-for="(post, index) in posts" :key="index" class="mb-4" shadow="hover"
+                        @click="openPostModal(index)">
                     <div class="flex items-center mb-2">
                         <ElAvatar :src="post.icon" size="small"/>
                         <span class="ml-2">{{ post.username }}</span>
                         <span class="ml-auto text-gray-500">{{ getTimeString(post.time) }}</span>
                     </div>
-                    <p>{{ post.content }}</p>
+                    <p class="text-left text-gray-700">{{ post.content }}</p>
                     <div v-if="post.type === 'rate'" class="mt-1">
                         <ElRate :model-value="post.rate" disabled allow-half class="ml-1"/>
                     </div>
@@ -587,6 +620,60 @@ onMounted(() => {
         <div v-if="isOwnProfile" class="w-full text-center mt-8">
             <ElButton @click="logOut">Logout</ElButton>
         </div>
+
+        <!-- Post Details Modal -->
+        <ElDialog
+            v-model="showPostModal"
+            :title="selectedPost && ('Post #' + selectedPost.postid)"
+            width="50%"
+        >
+            <template #default>
+                <div class="flex flex-row">
+                    <div class="ml-2.5 text-left flex flex-col">
+                        <div>
+                            <ElAvatar :src="selectedPost && selectedPost.icon" size="large"/>
+                        </div>
+                        <div class="w-20">
+                            <b>{{ selectedPost && selectedPost.username }}</b><br/>
+                            <p class="text-xs">{{ selectedPost && selectedPost.time }}</p>
+                        </div>
+                    </div>
+                    <div class="text-left ml-2 p-4 border-gray-300 border-l-[1px] flex-grow bg-gray-50">
+                        {{ selectedPost && selectedPost.content }}
+                    </div>
+                </div>
+                <hr class="mt-2"/>
+                <div class="relative overflow-scroll max-h-[320px]">
+                    <div v-for="(response, index) in selectedPost.responses" class="flex flex-row mt-4">
+                        <div class="ml-2.5 text-left flex flex-col">
+                            <div>
+                                <ElAvatar :src="response.icon" size="large"/>
+                            </div>
+                            <div class="w-20">
+                                <b>{{ response.username }}</b><br/>
+                                <p class="text-xs">{{ response.time }}</p>
+                            </div>
+                        </div>
+                        <div class="text-left ml-2 p-4 border-gray-300 border-l-[1px] flex-grow"
+                             :class="{'bg-blue-50': index % 2 === 0, 'bg-neutral-50': index % 2 === 1}">
+                            {{ response.content }}
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <ElInput
+                        type="textarea"
+                        v-model="newComment"
+                        placeholder="Enter your comment"
+                        :autosize="{minRows: 3, maxRows: 5}"
+                        class="mt-4"
+                    />
+                    <div class="text-right mt-2">
+                        <ElButton @click="sendPrivateMessage('post')" type="primary">Reply</ElButton>
+                    </div>
+                </div>
+            </template>
+        </ElDialog>
 
         <!-- Robot Details Modal -->
         <ElDialog
@@ -631,7 +718,6 @@ onMounted(() => {
                 <ElButton @click="showRobotRateModal = true">
                     Rate this robot
                 </ElButton>
-                <ElButton @click="showRobotModal = false">Close</ElButton>
             </template>
         </ElDialog>
 

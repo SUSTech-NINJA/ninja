@@ -3,21 +3,21 @@ import {FileInfo, useChatStore} from "../stores/chat";
 import {computed, onMounted, ref} from "vue";
 import {createConnection, toasterOptions} from "../config";
 import {createToaster} from "@meforma/vue-toaster";
-import {ArrowDown, Check, Cpu, Delete, EditPen, More, User} from "@element-plus/icons-vue";
+import {ArrowDown, Check, Cpu, Delete, EditPen, More, User} from "@element-plus/icons-vue"; //@ts-ignore
 import RatePanel from "../components/RatePanel.vue";
 import {useGlobalStore} from "../stores/global";
 import {firstUpperCase} from "../util";
 
 const chat = useChatStore();
 const global = useGlobalStore();
-const curChat = computed(() => chat.chatList.find((item) => item.chatid === chat.current));
+const curChat = computed(() => chat.chatList.find((item: any) => item.chatid === chat.current));
 const conn = createConnection();
 const toaster = createToaster(toasterOptions);
-const fetchFlag = ref(false), messages = ref([]), chatInput = ref(''),
-    robotid = ref(''), baseModel = ref(''), robotInfo = ref({}),
+const fetchFlag = ref(false), messages = ref([] as any[]), chatInput = ref(''),
+    robotid = ref(''), baseModel = ref(''), robotInfo = ref({} as any),
     editingCur = ref(false), titleEditing = ref(""), isSingleRound = ref(false),
     isOptimizingPrompt = ref(false), multimodalType = ref(''),
-    files = ref([]), newFile = ref(null), newFileName = ref(''), suggestions = ref([]);
+    files = ref([] as any[]), newFile = ref(null), newFileName = ref(''), suggestions = ref([]);
 
 onMounted(() => fetcher());
 let lastFetchFlag = false;
@@ -51,12 +51,12 @@ const getMessages = () => {
                     }
                     robotInfo.value = data;
                 })
-                .catch(err => {
+                .catch(_err => {
                     toaster.show('Query robot info failed', {type: 'error'});
                     robotInfo.value = {};
                 });
         })
-        .catch(err => {
+        .catch(_err => {
             toaster.show('Query chat list failed', {type: 'error'});
             messages.value = [];
         });
@@ -70,21 +70,21 @@ function editCur() {
     if (editingCur.value) {
         let formData = new FormData();
         formData.append('title', titleEditing.value);
-        conn.post('/chat/edit/' + curChat.value.chatid, formData)
-            .then(res => {
+        conn.post('/chat/edit/' + (curChat.value as any).chatid, formData)
+            .then(_res => {
                 toaster.show('Chat title updated', {type: 'success'});
                 for (let i = 0; i < chat.chatList.length; i++) {
-                    if (chat.chatList[i].chatid === curChat.value.chatid) {
-                        chat.chatList[i].title = titleEditing.value;
+                    if ((chat.chatList[i] as any).chatid === (curChat.value as any).chatid) {
+                        (chat.chatList[i] as any).title = titleEditing.value;
                         break;
                     }
                 }
             })
-            .catch(err => {
+            .catch(_err => {
                 toaster.show('Chat title update failed', {type: 'error'});
             });
     } else {
-        titleEditing.value = curChat.value.title;
+        titleEditing.value = (curChat.value as any).title;
     }
     editingCur.value = !editingCur.value;
 }
@@ -101,23 +101,23 @@ function sendChat() {
         formData.append('files', JSON.stringify(files.value));
     }
     conn.post('/chat/' + chat.current, formData)
-        .then(res => {
+        .then(_res => {
             toaster.show('Message sent', {type: 'success'});
             chatInput.value = '';
             getMessages();
         })
-        .catch(err => {
+        .catch(_err => {
             toaster.show('Message send failed', {type: 'error'});
         });
 }
 
 function clearContext() {
-    conn.post('/chat/clear/' + curChat.value.chatid)
-        .then(res => {
+    conn.post('/chat/clear/' + (curChat.value as any).chatid)
+        .then(_res => {
             toaster.show('Context cleared', {type: 'success'});
             chat.current = '';
         })
-        .catch(err => {
+        .catch(_err => {
             toaster.show('Context clear failed', {type: 'error'});
         });
 }
@@ -131,7 +131,7 @@ function getSuggestions() {
             }
             suggestions.value = data;
         })
-        .catch(err => {
+        .catch(_err => {
             toaster.show('Query chat list failed', {type: 'error'});
             messages.value = [];
         });
@@ -147,7 +147,7 @@ function optimizePrompt() {
             chatInput.value = res.data;
             isOptimizingPrompt.value = false;
         })
-        .catch(err => {
+        .catch(_err => {
             toaster.show('Prompt optimization failed', {type: 'error'});
             isOptimizingPrompt.value = false;
         });
@@ -155,56 +155,57 @@ function optimizePrompt() {
 
 function getRobotName() {
     try {
-        return robotInfo.value['info']['robot_name'];
+        return (robotInfo.value['info'] as any)['robot_name'];
     } catch (e) {
         return '';
     }
 }
 
-function openMultimodalDialog(type) {
+function openMultimodalDialog(type: string) {
     global.dialogs.multimodal = true;
     newFile.value = null;
     newFileName.value = '';
     multimodalType.value = type;
 }
 
-function inputFile(event) {
+function inputFile(event: any) {
     newFileName.value = event.target.files[0].name;
     let fileReader = new FileReader();
     fileReader.readAsDataURL(event.target.files[0]);
     fileReader.onload = function (e) {
-        newFile.value = e.target.result;
+        newFile.value = e.target?.result as any;
     };
 }
 
-function removeFile(name) {
+function removeFile(name: string) {
     files.value = files.value.filter(file => file.name !== name);
     toaster.show('File removed');
 }
 
-let mediaRecorder = null, timingTimeout = null, startTime = ref(null), curTime = ref(null);
+let mediaRecorder: any = null, timingTimeout: any = null,
+    startTime = ref(), curTime = ref();
 
 function startRecord() {
     navigator.mediaDevices.getUserMedia({audio: true})
         .then(stream => {
             mediaRecorder = new MediaRecorder(stream);
-            let chunks = [];
-            mediaRecorder.ondataavailable = e => {
+            let chunks = [] as any[];
+            mediaRecorder.ondataavailable = (e: any) => {
                 chunks.push(e.data);
             };
-            mediaRecorder.onstop = e => {
+            mediaRecorder.onstop = (_e: any) => {
                 if (curTime.value - startTime.value < 1000) {
                     toaster.show('Voice recording too short', {type: 'warning'});
                     return;
                 }
                 let blob = new Blob(chunks, {type: 'audio/ogg; codecs=opus'});
                 toaster.success('Voice recorded');
-                newFile.value = URL.createObjectURL(blob);
+                newFile.value = URL.createObjectURL(blob) as any;
                 newFileName.value = 'voice' + startTime.value + '.ogg';
                 if (timingTimeout !== null) {
                     clearInterval(timingTimeout);
-                    startTime = null;
-                    curTime = null;
+                    startTime.value = null;
+                    curTime.value = null;
                 }
             };
             mediaRecorder.start();
@@ -215,7 +216,7 @@ function startRecord() {
             }, 1000);
             toaster.show('Recording started');
         })
-        .catch(err => {
+        .catch(_err => {
             toaster.show('Failed to record voice', {type: 'error'});
         });
 }
@@ -244,7 +245,7 @@ function submitFile() {
         toaster.show('No file updated or recorded', {type: 'warning'});
         return;
     }
-    if (newFile.value.length > 1024 * 1024 * 100) {
+    if ((newFile.value as any).length > 1024 * 1024 * 100) {
         toaster.show('File size exceeds 100kb, abort', {type: 'warning'});
         return;
     }
@@ -260,7 +261,7 @@ function isLastAssistantMsg(role: string, index: number) {
     if (role !== 'assistant') return false;
     else {
         for (let i = messages.value.length - 1; i >= index; i--) {
-            if (messages.value[i].role === 'assistant') {
+            if ((messages.value[i] as any).role === 'assistant') {
                 return i === index;
             }
         }
@@ -280,7 +281,7 @@ function isLastAssistantMsg(role: string, index: number) {
         <div class="grid grid-cols-3 w-full mb-4 flex-none top-bar">
             <div class="col-span-2 text-left block">
                 <h1 class="text-xl font-bold inline-block" v-if="!editingCur">
-                    {{ curChat?.title }}
+                    {{ (curChat as any)?.title }}
                 </h1>
                 <el-input v-model="titleEditing" v-else class="w-1/2"/>
                 <p class="text-sm text-gray-500 inline-block ml-1.5">
