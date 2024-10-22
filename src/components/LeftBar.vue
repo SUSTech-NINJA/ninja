@@ -5,9 +5,7 @@ import {ArrowDown, Close, MagicStick, Plus, Search, Setting, User} from "@elemen
 import {addActiveClass, addHoverClass, getTimeString, removeActiveClass, removeHoverClass} from "../util";
 import {createConnection, toasterOptions} from "../config";
 import {createToaster} from "@meforma/vue-toaster";
-import {useRouter, useRoute} from "vue-router";
-import {ElMessage} from 'element-plus';
-import dayjs from 'dayjs';
+import {useRoute, useRouter} from "vue-router";
 import {useGlobalStore} from '../stores/global';
 
 const chat = useChatStore();
@@ -444,6 +442,7 @@ async function fetchUserInfo() {
         <div class="text-2xl font-bold flex-none grid grid-cols-2">
             <p>Ninja Chat</p>
             <div class="text-right">
+                <el-button :icon="Search" class="mr-2" circle @click="openSearchDialog"/>
                 <router-link to="/user" class="mr-2">
                     <el-button :icon="User" circle/>
                 </router-link>
@@ -454,19 +453,7 @@ async function fetchUserInfo() {
         </div>
 
         <hr class="mt-3 mb-3"/>
-        <div class="w-full mt-8 mb-8">
-            <el-input
-                v-model="searchInput"
-                placeholder="Search for robots or users"
-                class="input-with-select" @keyup.enter.native="openSearchDialog"
-            >
-                <template #prepend>
-                    <el-button :icon="Search" @click="openSearchDialog"/>
-                </template>
-            </el-input>
-        </div>
-
-        <el-card shadow="none" class="mt-2">
+        <el-card shadow="never" class="mt-2">
             <div class="flex-none w-full text-left">
                 <p class="font-bold">Start chat with</p>
                 <div class="grid grid-cols-1 xl:grid-cols-2">
