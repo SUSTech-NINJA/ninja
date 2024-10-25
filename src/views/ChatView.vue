@@ -17,7 +17,7 @@ const fetchFlag = ref(false), messages = ref([] as any[]), chatInput = ref(''),
     robotid = ref(''), baseModel = ref(''), robotInfo = ref({} as any),
     editingCur = ref(false), titleEditing = ref(""), isSingleRound = ref(false),
     isOptimizingPrompt = ref(false), multimodalType = ref(''),
-    files = ref([] as any[]), newFile = ref(null), newFileName = ref(''), suggestions = ref([]);
+    files = ref([] as any[]), newFile = ref(null), newFileName = ref(''), suggestion = ref("");
 
 onMounted(() => {
     if (!global.token) return;
@@ -128,7 +128,7 @@ async function sendChat() {
             'files': JSON.stringify(files.value)
         };
         chatInput.value = '';
-        suggestions.value = [];
+        suggestion.value = '';
         const res = await fetch(host + '/chat/' + chat.current, {
             method: 'POST',
             headers: {
@@ -188,15 +188,12 @@ function getSuggestions() {
     })
         .then(res => {
             let data = res.data;
-            if (typeof data === 'string') {
-                data = JSON.parse(data);
-            }
-            suggestions.value = data;
+            suggestion.value = data;
         })
         .catch(err => {
             console.log(err);
             toaster.show('Query suggestion failed', {type: 'error'});
-            suggestions.value = [];
+            suggestion.value = '';
         });
 }
 
@@ -394,13 +391,11 @@ function toggleInput(input: string) {
                         </el-card>
                         <div class="text-xs text-gray-500 text-left ml-3 mr-3"
                              v-if="isLastAssistantMsg(item.role, index)">
-                            <div v-for="(suggest, index) in suggestions" :key="index">
-                                <el-check-tag type="info" size="small" class="mt-2 !text-xs !p-1.5 !font-normal"
-                                              @click="toggleInput(suggest)">{{
-                                        suggest
-                                    }}
-                                </el-check-tag>
-                            </div>
+                            <el-check-tag type="info" size="small" class="mt-2 !text-xs !p-1.5 !font-normal"
+                                          @click="toggleInput(suggestion)">{{
+                                    suggestion
+                                }}
+                            </el-check-tag>
                         </div>
                     </div>
                 </div>
