@@ -34,7 +34,9 @@ const fetcher = () => {
 };
 
 const getMessages = () => {
-    conn.get('/chat/' + chat.current)
+    conn.get('/chat/' + chat.current, {
+        headers: {'Authorization': 'Bearer ' + global.token}
+    })
         .then(res => {
             let data = res.data;
             if (typeof data === 'string') {
@@ -43,7 +45,9 @@ const getMessages = () => {
             messages.value = data.messages;
             robotid.value = data.robotid;
             baseModel.value = data['base-model'];
-            conn.get('/robot/' + robotid.value)
+            conn.get('/robot/' + robotid.value, {
+                headers: {'Authorization': 'Bearer ' + global.token}
+            })
                 .then(res => {
                     let data = res.data;
                     if (typeof data === 'string') {
@@ -70,7 +74,9 @@ function editCur() {
     if (editingCur.value) {
         let formData = new FormData();
         formData.append('title', titleEditing.value);
-        conn.post('/chat/edit/' + (curChat.value as any).chatid, formData)
+        conn.post('/chat/edit/' + (curChat.value as any).chatid, formData, {
+            headers: {'Authorization': 'Bearer ' + global.token}
+        })
             .then(_res => {
                 toaster.show('Chat title updated', {type: 'success'});
                 for (let i = 0; i < chat.chatList.length; i++) {
@@ -100,7 +106,9 @@ function sendChat() {
     if (files.value.length > 0) {
         formData.append('files', JSON.stringify(files.value));
     }
-    conn.post('/chat/' + chat.current, formData)
+    conn.post('/chat/' + chat.current, formData, {
+        headers: {'Authorization': 'Bearer ' + global.token}
+    })
         .then(_res => {
             toaster.show('Message sent', {type: 'success'});
             chatInput.value = '';
@@ -112,7 +120,9 @@ function sendChat() {
 }
 
 function clearContext() {
-    conn.post('/chat/clear/' + (curChat.value as any).chatid)
+    conn.post('/chat/clear/' + (curChat.value as any).chatid, {
+        headers: {'Authorization': 'Bearer ' + global.token}
+    })
         .then(_res => {
             toaster.show('Context cleared', {type: 'success'});
             chat.current = '';
@@ -123,7 +133,9 @@ function clearContext() {
 }
 
 function getSuggestions() {
-    conn.get('/chat/suggestions/' + chat.current)
+    conn.get('/chat/suggestions/' + chat.current, {
+        headers: {'Authorization': 'Bearer ' + global.token}
+    })
         .then(res => {
             let data = res.data;
             if (typeof data === 'string') {
@@ -141,7 +153,9 @@ function optimizePrompt() {
     isOptimizingPrompt.value = true;
     let formData = new FormData();
     formData.append('text', chatInput.value);
-    conn.post('/chat/optimize', formData)
+    conn.post('/chat/optimize', formData, {
+        headers: {'Authorization': 'Bearer ' + global.token}
+    })
         .then(res => {
             toaster.show('Prompt optimized', {type: 'success'});
             chatInput.value = res.data;

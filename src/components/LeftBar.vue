@@ -101,7 +101,9 @@ const fetcher = () => {
 
 // 获取消息列表
 const getMessagesList = () => {
-    conn.get('/chat')
+    conn.get('/chat', {
+        headers: {'Authorization': 'Bearer ' + global.token}
+    })
         .then(res => {
             let data = res.data;
             if (typeof data === 'string') {
@@ -117,7 +119,9 @@ const getMessagesList = () => {
 };
 
 const removeChat = (chatid: any) => {
-    conn.delete(`/chat/${chatid}`)
+    conn.delete(`/chat/${chatid}`, {
+        headers: {'Authorization': 'Bearer ' + global.token}
+    })
         .then(() => {
             toaster.show('Chat deletion success', {type: 'success'});
             fetcher();
@@ -129,7 +133,9 @@ const removeChat = (chatid: any) => {
 
 // 获取机器人列表
 const getRobots = () => {
-    conn.get('/robot')
+    conn.get('/robot', {
+        headers: {'Authorization': 'Bearer ' + global.token}
+    })
         .then(res => {
             let data = res.data;
             if (typeof data === 'string') {
@@ -143,7 +149,9 @@ const getRobots = () => {
         });
 };
 const getBaseModels = () => {
-    conn.get('/admin/robot')
+    conn.get('/admin/robot', {
+        headers: {'Authorization': 'Bearer ' + global.token}
+    })
         .then(res => {
             let data = res.data;
             if (typeof data === 'string') {
@@ -169,7 +177,9 @@ const getRobotRest = computed(() => {
 
 // 获取代币数量
 const getToken = () => {
-    conn.get('/shop/current')
+    conn.get('/shop/current', {
+        headers: {'Authorization': 'Bearer ' + global.token}
+    })
         .then(res => {
             let data = res.data;
             if (typeof data === 'string') {
@@ -190,7 +200,9 @@ const cancelRecharge = () => {
 };
 const selectRechargeOption = (option: any) => {
     const newTokenAmount = coin.value + option.coins;
-    conn.post('/shop/buy_package', {result: newTokenAmount})
+    conn.post('/shop/buy_package', {result: newTokenAmount}, {
+        headers: {'Authorization': 'Bearer ' + global.token}
+    })
         .then(_res => {
             coin.value = newTokenAmount;
             showRechargeDialog.value = false;
@@ -209,7 +221,9 @@ function startChatWithRobot(item: any) {
     let formData = new FormData();
     formData.append('model', item.base_model);
     formData.append('prompts', item.system_prompt);
-    conn.post('/chat/new', formData)
+    conn.post('/chat/new', formData, {
+        headers: {'Authorization': 'Bearer ' + global.token}
+    })
         .then(res => {
             fetcher();
             toaster.show('Chat creation success', {type: 'success'});
@@ -256,7 +270,9 @@ function submitBotCreation() {
     formData.append('price', createBotData.value.price.toString());
     formData.append('quota', createBotData.value.quota.toString());
     formData.append('icon', createBotData.value.icon);
-    conn.post('/robot/new', formData)
+    conn.post('/robot/new', formData, {
+        headers: {'Authorization': 'Bearer ' + global.token}
+    })
         .then(_res => {
             createBotDialog.value = false;
             toaster.show('Bot creation success', {type: 'success'});
@@ -292,7 +308,9 @@ function performSearch() {
             input: searchQuery.value,
         };
     }
-    conn.get(url, {params})
+    conn.get(url, {params}, {
+        headers: {'Authorization': 'Bearer ' + global.token}
+    })
         .then(res => {
             let data: any = res.data;
             if (typeof data === 'string') {
@@ -321,7 +339,9 @@ function handleResultClick(item: any) {
 
 // 获取机器人信息并展示
 function getRobotInfo(robotid: string) {
-    conn.get(`/robot/${robotid}`)
+    conn.get(`/robot/${robotid}`, {
+        headers: {'Authorization': 'Bearer ' + global.token}
+    })
         .then(res => {
             let data = res.data.info;
             selectedRobot.value = data;
@@ -335,7 +355,9 @@ function getRobotInfo(robotid: string) {
 
 // 获取用户信息并展示
 function getUserInfo(uuid: string) {
-    conn.get(`/user/${uuid}`)
+    conn.get(`/user/${uuid}`, {
+        headers: {'Authorization': 'Bearer ' + global.token}
+    })
         .then(res => {
             let data = res.data;
             selectedUser.value = data;
@@ -375,7 +397,9 @@ function rateRobot() {
         rate: robotRating.value,
         userid: global.uuid,
     };
-    conn.post(`/robot/post/${selectedRobot.value?.robotid}`, payload)
+    conn.post(`/robot/post/${selectedRobot.value?.robotid}`, payload, {
+        headers: {'Authorization': 'Bearer ' + global.token}
+    })
         .then(_res => {
             toaster.show('Rating submitted successfully', {type: 'success'});
             robotComment.value = '';
@@ -399,6 +423,8 @@ function rateUser() {
     }
     conn.post(`/evaluate_user/${userInfo.value.uuid}`, {
         rate: newRating.value,
+    }, {
+        headers: {'Authorization': 'Bearer ' + global.token}
     })
         .then(_res => {
             toaster.show('Rating sent successfully', {type: 'success'});
@@ -421,7 +447,9 @@ function goToUserProfile() {
 async function fetchUserInfo() {
     try {
         const userId = (route.params.userId as string) || global.uuid;
-        const response = await conn.get(`/user/${userId}`);
+        const response = await conn.get(`/user/${userId}`, {
+            headers: {'Authorization': 'Bearer ' + global.token}
+        });
         if (response.status === 200) {
             const data = response.data;
             userInfo.value.username = data.UserInfo.name;

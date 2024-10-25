@@ -7,7 +7,7 @@
             <div class="text-right">
                 <router-link to="/">
                     <el-icon>
-                        <Close />
+                        <Close/>
                     </el-icon>
                 </router-link>
             </div>
@@ -36,22 +36,22 @@
                     label="Actions"
                     align="right"
                 >
-                        <el-button
-                            type="primary"
-                            size="small"
-                            @click="openSettingDialog(scope.row)"
-                        >
-                            Setting
-                        </el-button>
+                    <el-button
+                        type="primary"
+                        size="small"
+                        @click="openSettingDialog(scope.row)"
+                    >
+                        Setting
+                    </el-button>
 
-                            <el-button
-                                type="danger"
-                                size="small"
-                                slot="reference"
-                                @click="deleteModel(scope.$index)"
-                            >
-                                Delete
-                            </el-button>
+                    <el-button
+                        type="danger"
+                        size="small"
+                        slot="reference"
+                        @click="deleteModel(scope.$index)"
+                    >
+                        Delete
+                    </el-button>
                 </el-table-column>
             </el-table>
         </div>
@@ -80,13 +80,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { ElMessage } from 'element-plus';
-import { Close } from "@element-plus/icons-vue";
-import axios from 'axios';
-
+import {onMounted, ref} from 'vue';
+import {ElMessage} from 'element-plus';
+import {Close} from "@element-plus/icons-vue";
+import {createConnection} from "../config.ts";
+import {useGlobalStore} from "../stores/global.ts";
 
 const models = ref([]);
+const global = useGlobalStore();
 
 const settingDialogVisible = ref(false);
 
@@ -96,16 +97,20 @@ const headerCellStyle = {
     fontWeight: 'bold',
 };
 
+const conn = createConnection();
+
 const fetchModels = () => {
-    axios.get('http://127.0.0.1:4523/m1/5188287-4853858-default/admin/robot')
+    conn.get('/robot', {
+        headers: {'Authorization': 'Bearer ' + global.token}
+    })
         .then(response => {
-            models.value = response.data.map(item => ({
+            models.value = response.data.map((item: any) => ({
                 name: item.name,
                 tokens: item.robotid,
                 id: item.id,
             }));
         })
-        .catch(error => {
+        .catch(_error => {
             ElMessage({
                 type: 'error',
                 message: '获取模型数据失败',
@@ -117,11 +122,11 @@ onMounted(() => {
     fetchModels();
 });
 
-const openSettingDialog = (row) => {
+const openSettingDialog = (_row: any) => {
     settingDialogVisible.value = true;
 };
 
-const deleteModel = (index) => {
+const deleteModel = (index: any) => {
     models.value.splice(index, 1);
     ElMessage({
         type: 'success',

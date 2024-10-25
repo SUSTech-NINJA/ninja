@@ -20,7 +20,9 @@ function submitRating() {
     formData.append('rate', rate.value);
     formData.append('content', comment.value);
     formData.append('userid', props.userid);
-    conn.post('/robot/post/' + props.robotid, formData)
+    conn.post('/robot/post/' + props.robotid, formData, {
+        headers: {'Authorization': 'Bearer ' + global.token}
+    })
         .then(res => {
             toaster.show('Rating submitted', {type: 'success'});
             global.dialogs.rate = false;
@@ -42,10 +44,10 @@ watch(() => global.dialogs.rate, (newVal) => {
     <el-dialog title="Rate the robot" v-model="global.dialogs.rate">
         <el-form label-width="auto">
             <el-form-item label="Rate">
-                <el-rate v-model="rate" :colors="colors" :show-score="rate !== 0" />
+                <el-rate v-model="rate" :colors="colors" :show-score="rate !== 0"/>
             </el-form-item>
             <el-form-item label="Comment">
-                <el-input v-model="comment" type="textarea" />
+                <el-input v-model="comment" type="textarea"/>
             </el-form-item>
         </el-form>
         <template #footer>

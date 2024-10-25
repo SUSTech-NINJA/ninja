@@ -82,17 +82,13 @@ const showRateDialog = ref(false); // Added for user rating dialog
 // Axios instance with base config and request interceptor
 const api = createConnection();
 
-// Request interceptor to add Token to request headers
-api.interceptors.request.use((config) => {
-    config.headers['Authorization'] = `Bearer ${global.token}`;
-    return config;
-});
-
 // Fetch user info, posts, and robot list
 async function fetchUserInfo() {
     try {
         const userId = (route.params.userId as string) || global.uuid;
-        const response = await api.get(`/user/${userId}`);
+        const response = await api.get(`/user/${userId}`, {
+            headers: {'Authorization': 'Bearer ' + global.token}
+        });
         if (response.status === 200) {
             const data = response.data;
             userInfo.value.username = data.UserInfo.name;
@@ -112,11 +108,13 @@ async function fetchUserInfo() {
 async function fetchPosts() {
     try {
         const userId = (route.params.userId as string) || global.uuid;
-        const response = await api.get(`/user/${userId}`);
+        const response = await api.get(`/user/${userId}`, {
+            headers: {'Authorization': 'Bearer ' + global.token}
+        });
         if (response.status === 200) {
             const data = response.data;
             posts.value = data.post || [];
-            selectedPost.value = posts.value[selectedPostId.value];
+            selectedPost.value = posts.value[selectedPostId.value as any];
         }
     } catch (error) {
         ElMessage.error('Failed to fetch posts');
@@ -126,7 +124,9 @@ async function fetchPosts() {
 // Fetch current user's info
 async function fetchCurrentUserInfo() {
     try {
-        const response = await api.get(`/user/${global.uuid}`);
+        const response = await api.get(`/user/${global.uuid}`, {
+            headers: {'Authorization': 'Bearer ' + global.token}
+        });
         if (response.status === 200) {
             const data = response.data;
             currentUserInfo.value.username = data.UserInfo.name;
@@ -150,7 +150,8 @@ async function updateUserInfo() {
         const response = await api.post('/settings', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
-            },
+                'Authorization': 'Bearer ' + global.token
+            }
         });
 
         if (response.status === 200) {
@@ -167,7 +168,9 @@ async function updateUserInfo() {
 // Open messages
 async function fetchMessages() {
     try {
-        const response = await api.get(`/conversation/${global.uuid}`);
+        const response = await api.get(`/conversation/${global.uuid}`, {
+            headers: {'Authorization': 'Bearer ' + global.token}
+        });
         if (response.status === 200) {
             const data = response.data;
             messages.value = data.conversation_list || [];
@@ -185,9 +188,9 @@ async function openMessages() {
 // View chat history
 async function viewChatHistory(message: any) {
     try {
-        const response = await api.get(
-            `/get_history/${message.userid}`
-        );
+        const response = await api.get(`/get_history/${message.userid}`, {
+            headers: {'Authorization': 'Bearer ' + global.token}
+        });
         if (response.status === 200) {
             const data = response.data;
             chatHistory.value = data.history || [];
@@ -219,7 +222,9 @@ async function sendChatReply() {
             icon: currentUserInfo.value.avatar,
             uuid: chatWithUser.value,
         };
-        const response = await api.post('/send_message', payload);
+        const response = await api.post('/send_message', payload, {
+            headers: {'Authorization': 'Bearer ' + global.token}
+        });
         if (response.status === 200) {
             ElMessage.success('Message sent successfully');
             chatReplyContent.value = '';
@@ -246,7 +251,9 @@ async function publishPost() {
             name: currentUserInfo.value.username,
             uuid: userInfo.value.uuid, // Recipient's UUID
         };
-        const response = await api.post('/post', payload);
+        const response = await api.post('/post', payload, {
+            headers: {'Authorization': 'Bearer ' + global.token}
+        });
         if (response.status === 200) {
             ElMessage.success('Post published successfully');
             newPostContent.value = '';
@@ -281,7 +288,9 @@ async function sendPrivateMessage(mode: string) {
             icon: currentUserInfo.value.avatar,
             uuid: userInfo.value.uuid,
         };
-        const response = await api.post('/send_message', payload);
+        const response = await api.post('/send_message', payload, {
+            headers: {'Authorization': 'Bearer ' + global.token}
+        });
         if (response.status === 200) {
             ElMessage.success('Message sent successfully');
             newComment.value = '';
@@ -314,6 +323,8 @@ async function rateUser() {
             `/evaluate_user/${userInfo.value.uuid}`,
             {
                 rate: newRating.value,
+            }, {
+                headers: {'Authorization': 'Bearer ' + global.token}
             }
         );
         if (response.status === 200) {
@@ -341,7 +352,8 @@ async function sendRobotRating() {
         };
         const response = await api.post(
             `/robot/post/${selectedRobot.value.robotid}`,
-            payload
+            payload,
+            {headers: {'Authorization': 'Bearer ' + global.token}}
         );
         if (response.status === 200) {
             ElMessage.success('Rating submitted successfully');
