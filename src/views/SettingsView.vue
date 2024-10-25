@@ -142,7 +142,7 @@ const fetchModels = () => {
         .catch(_error => {
             ElMessage({
                 type: 'error',
-                message: '获取模型数据失败',
+                message: 'Failed to fetch models',
             });
         });
 };
@@ -159,30 +159,32 @@ const openSettingDialog = (row: any) => {
 };
 
 const onDialogConfirm = () => {
-    // 在这里添加提交更新数据的逻辑，例如发送 PUT 或 POST 请求到后端
-    // 例如：
-    // conn.put(`/admin/robot/update/${settingModel.value.id}`, settingModel.value, {
-    //   headers: { 'Authorization': 'Bearer ' + global.token }
-    // })
-    //   .then(() => {
-    //     ElMessage({
-    //       type: 'success',
-    //       message: '更新成功',
-    //     });
-    //     fetchModels();
-    //     settingDialogVisible.value = false;
-    //   })
-    //   .catch(() => {
-    //     ElMessage({
-    //       type: 'error',
-    //       message: '更新失败',
-    //     });
-    //   });
+    const base_modal_id = settingModel.value.id;
+    let formData = new FormData();
+    formData.append('name', settingModel.value.name);
+    formData.append('modal_tokens_limitation', settingModel.value.tokensLimit);
+    formData.append('price', settingModel.value.tokensPrice);
 
-    // 目前暂时关闭对话框
-    settingDialogVisible.value = false;
-    fetchModels();
-    InputEnable.value = true;
+    conn.post(`/admin/robot/update/${base_modal_id}`, {
+        data: formData
+    }, {
+        headers: { 'Authorization': 'Bearer ' + global.token }
+    })
+        .then(() => {
+            ElMessage({
+                type: 'success',
+                message: 'Update successfully',
+            });
+            fetchModels();
+            InputEnable.value = true;
+            settingDialogVisible.value = false;
+        })
+        .catch(() => {
+            ElMessage({
+                type: 'error',
+                message: 'Failed to update model',
+            });
+        });
 };
 
 const deleteModel = (index: number) => {
@@ -195,14 +197,14 @@ const deleteModel = (index: number) => {
         .then(() => {
             ElMessage({
                 type: 'success',
-                message: '删除成功',
+                message: 'Delete successfully',
             });
             fetchModels();
         })
         .catch(() => {
             ElMessage({
                 type: 'error',
-                message: '删除失败',
+                message: 'Failed to delete model',
             });
         });
 };
