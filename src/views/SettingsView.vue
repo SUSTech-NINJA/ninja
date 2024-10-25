@@ -148,6 +148,7 @@ const fetchModels = () => {
 };
 
 onMounted(() => {
+    if (!global.token) return;
     fetchModels();
 });
 

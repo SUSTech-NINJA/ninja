@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {FileInfo, useChatStore} from "../stores/chat";
 import {computed, onMounted, ref} from "vue";
-import {createConnection, toasterOptions} from "../config";
+import {createConnection, host, toasterOptions} from "../config";
 import {createToaster} from "@meforma/vue-toaster";
 import {ArrowDown, Check, Cpu, Delete, EditPen, More, User} from "@element-plus/icons-vue"; //@ts-ignore
 import RatePanel from "../components/RatePanel.vue";
@@ -19,9 +19,13 @@ const fetchFlag = ref(false), messages = ref([] as any[]), chatInput = ref(''),
     isOptimizingPrompt = ref(false), multimodalType = ref(''),
     files = ref([] as any[]), newFile = ref(null), newFileName = ref(''), suggestions = ref([]);
 
-onMounted(() => fetcher());
+onMounted(() => {
+    if (!global.token) return;
+    fetcher();
+});
 let lastFetchFlag = false;
 chat.$subscribe(() => {
+    if (!global.token) return;
     if (fetchFlag.value !== lastFetchFlag) {
         lastFetchFlag = fetchFlag.value;
     } else fetcher();
@@ -55,12 +59,14 @@ const getMessages = () => {
                     }
                     robotInfo.value = data;
                 })
-                .catch(_err => {
+                .catch(err => {
+                    console.log(err);
                     toaster.show('Query robot info failed', {type: 'error'});
                     robotInfo.value = {};
                 });
         })
-        .catch(_err => {
+        .catch(err => {
+            console.log(err);
             toaster.show('Query chat list failed', {type: 'error'});
             messages.value = [];
         });
@@ -86,7 +92,8 @@ function editCur() {
                     }
                 }
             })
-            .catch(_err => {
+            .catch(err => {
+                console.log(err);
                 toaster.show('Chat title update failed', {type: 'error'});
             });
     } else {
@@ -95,28 +102,70 @@ function editCur() {
     editingCur.value = !editingCur.value;
 }
 
-function sendChat() {
+const controller = ref(new AbortController());
+const isStopped = ref(false);
+
+async function sendChat() {
     if (chatInput.value === '') {
         toaster.show('Message cannot be empty', {type: 'warning'});
         return;
     }
-    let formData = new FormData();
-    formData.append('message', chatInput.value);
-    formData.append('single-round', isSingleRound.value.toString());
-    if (files.value.length > 0) {
-        formData.append('files', JSON.stringify(files.value));
-    }
-    conn.post('/chat/' + chat.current, formData, {
-        headers: {'Authorization': 'Bearer ' + global.token}
-    })
-        .then(_res => {
-            toaster.show('Message sent', {type: 'success'});
-            chatInput.value = '';
-            getMessages();
-        })
-        .catch(_err => {
-            toaster.show('Message send failed', {type: 'error'});
+    try {
+        controller.value = new AbortController();
+        messages.value.push({
+            role: 'user',
+            content: chatInput.value
         });
+        isStopped.value = false;
+        messages.value.push({
+            role: 'assistant',
+            content: ''
+        });
+        let last = messages.value.length - 1;
+        let json = {
+            'message': chatInput.value,
+            'single-round': isSingleRound.value.toString(),
+            'files': JSON.stringify(files.value)
+        };
+        chatInput.value = '';
+        suggestions.value = [];
+        const res = await fetch(host + '/chat/' + chat.current, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + global.token
+            },
+            body: JSON.stringify(json),
+            signal: controller.value.signal
+        });
+        toaster.show('Message sent', {type: 'success'});
+        const reader = res.body?.getReader();
+        if (typeof reader != 'undefined') {
+            while (true) {
+                if (isStopped.value) break;
+                const {done, value} = await reader.read();
+                if (done) break;
+                messages.value[last].content += new TextDecoder().decode(value);
+            }
+        }
+        conn.get('/title/' + chat.current, {
+            headers: {'Authorization': 'Bearer ' + global.token}
+        })
+            .then(res => {
+                let data = res.data;
+                editingCur.value = true;
+                titleEditing.value = data;
+                editCur();
+            })
+            .catch(err => {
+                console.log(err);
+                toaster.show('Get title failed', {type: 'error'});
+                messages.value = [];
+            });
+    } catch (err) {
+        console.log(err);
+        toaster.show('Message send failed', {type: 'error'});
+    }
 }
 
 function clearContext() {
@@ -127,7 +176,8 @@ function clearContext() {
             toaster.show('Context cleared', {type: 'success'});
             chat.current = '';
         })
-        .catch(_err => {
+        .catch(err => {
+            console.log(err);
             toaster.show('Context clear failed', {type: 'error'});
         });
 }
@@ -143,9 +193,10 @@ function getSuggestions() {
             }
             suggestions.value = data;
         })
-        .catch(_err => {
-            toaster.show('Query chat list failed', {type: 'error'});
-            messages.value = [];
+        .catch(err => {
+            console.log(err);
+            toaster.show('Query suggestion failed', {type: 'error'});
+            suggestions.value = [];
         });
 }
 
@@ -161,7 +212,8 @@ function optimizePrompt() {
             chatInput.value = res.data;
             isOptimizingPrompt.value = false;
         })
-        .catch(_err => {
+        .catch(err => {
+            console.log(err);
             toaster.show('Prompt optimization failed', {type: 'error'});
             isOptimizingPrompt.value = false;
         });
@@ -282,6 +334,10 @@ function isLastAssistantMsg(role: string, index: number) {
         return false;
     }
 }
+
+function toggleInput(input: string) {
+    chatInput.value = input;
+}
 </script>
 
 <template>
@@ -333,13 +389,14 @@ function isLastAssistantMsg(role: string, index: number) {
                     </div>
                     <div>
                         <el-card shadow="never" class="ml-3 mr-3 text-sm w-fit"
-                                 :class="item.role === 'user' ? 'bg-blue-50' : 'bg-neutral-50'">
+                                 :class="item.role === 'user' ? 'bg-blue-50 text-right' : 'bg-neutral-50 text-left'">
                             {{ item.content }}
                         </el-card>
                         <div class="text-xs text-gray-500 text-left ml-3 mr-3"
                              v-if="isLastAssistantMsg(item.role, index)">
                             <div v-for="(suggest, index) in suggestions" :key="index">
-                                <el-check-tag type="info" size="small" class="mt-2 !text-xs !p-1.5 !font-normal">{{
+                                <el-check-tag type="info" size="small" class="mt-2 !text-xs !p-1.5 !font-normal"
+                                              @click="toggleInput(suggest)">{{
                                         suggest
                                     }}
                                 </el-check-tag>

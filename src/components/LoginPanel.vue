@@ -9,7 +9,8 @@ const global = useGlobalStore();
 const formLabelWidth = '80px';
 const loginForm = ref({
     username: '',
-    password: ''
+    password: '',
+    email: ''
 }), loginLoading = ref(false);
 const conn = createConnection();
 
@@ -27,13 +28,16 @@ function login() {
             loginLoading.value = false;
             if (res.status === 200) {
                 global.notLogin = false;
+                toaster.show('Login successful', {type: 'success'});
                 let json = res.data;
                 if (typeof json === 'string') {
                     json = JSON.parse(json);
                 }
-                global.uuid = json.uuid;
+                global.uuid = json.userid;
                 global.token = json.token;
-                toaster.show('Login successful', {type: 'success'});
+                setTimeout(() => {
+                    location.reload();
+                }, 500);
             } else {
                 toaster.show('Login failed', {type: 'error'});
             }
@@ -48,6 +52,7 @@ function triggerRegister() {
     global.register = true;
     loginForm.value.username = '';
     loginForm.value.password = '';
+    loginForm.value.email = '';
 }
 
 function register() {
@@ -59,19 +64,13 @@ function register() {
     let formData = new FormData();
     formData.append('username', loginForm.value.username);
     formData.append('password', loginForm.value.password);
+    formData.append('email', loginForm.value.email);
     conn.post('/register', formData)
         .then(res => {
             loginLoading.value = false;
             if (res.status === 200) {
-                toaster.show('Register successful', {type: 'success'});
+                toaster.show('Register successful, now you can log in', {type: 'success'});
                 global.register = false;
-                global.notLogin = false;
-                let json = res.data;
-                if (typeof json === 'string') {
-                    json = JSON.parse(json);
-                }
-                global.uuid = json.uuid;
-                global.token = json.token;
             } else {
                 toaster.show('Register failed', {type: 'error'});
             }
@@ -94,10 +93,10 @@ function register() {
     >
         <el-form :model="loginForm">
             <el-form-item label="Username" :label-width="formLabelWidth">
-                <el-input v-model="loginForm.username" autocomplete="off" />
+                <el-input v-model="loginForm.username" autocomplete="off"/>
             </el-form-item>
             <el-form-item label="Password" :label-width="formLabelWidth">
-                <el-input v-model="loginForm.password" type="password" autocomplete="off" />
+                <el-input v-model="loginForm.password" type="password" autocomplete="off"/>
             </el-form-item>
         </el-form>
         <template #footer>
@@ -121,10 +120,13 @@ function register() {
     >
         <el-form :model="loginForm">
             <el-form-item label="Username" :label-width="formLabelWidth">
-                <el-input v-model="loginForm.username" autocomplete="off" />
+                <el-input v-model="loginForm.username" autocomplete="off"/>
             </el-form-item>
             <el-form-item label="Password" :label-width="formLabelWidth">
-                <el-input v-model="loginForm.password" type="password" autocomplete="off" />
+                <el-input v-model="loginForm.password" type="password" autocomplete="off"/>
+            </el-form-item>
+            <el-form-item label="Email" :label-width="formLabelWidth">
+                <el-input v-model="loginForm.email" autocomplete="off"/>
             </el-form-item>
         </el-form>
         <template #footer>

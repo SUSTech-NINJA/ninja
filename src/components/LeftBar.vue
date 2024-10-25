@@ -78,10 +78,12 @@ const isOwnProfile = computed(() => {
 
 // 监听路由变化，获取用户信息
 watch(() => route.params.userId, () => {
+    if (!global.token) return;
     fetchUserInfo();
 });
 
 onMounted(() => {
+    if (!global.token) return;
     fetcher();
     fetchUserInfo();
 });
@@ -112,7 +114,12 @@ const getMessagesList = () => {
             chat.chatList = data;
             fetchFlag.value = !fetchFlag.value;
         })
-        .catch(_err => {
+        .catch(err => {
+            if (err.response.status === 401) {
+                global.token = '';
+                global.uuid = '';
+                router.push('/');
+            }
             toaster.show('Failed to query chat list', {type: 'error'});
             chat.chatList = [];
         });
@@ -143,7 +150,12 @@ const getRobots = () => {
             }
             robotList.value = data;
         })
-        .catch(_err => {
+        .catch(err => {
+            if (err.response.status === 401) {
+                global.token = '';
+                global.uuid = '';
+                router.push('/');
+            }
             toaster.show('Failed to query robot list', {type: 'error'});
             robotList.value = [];
         });
@@ -159,7 +171,12 @@ const getBaseModels = () => {
             }
             baseModelList.value = data;
         })
-        .catch(_err => {
+        .catch(err => {
+            if (err.response.status === 401) {
+                global.token = '';
+                global.uuid = '';
+                router.push('/');
+            }
             toaster.show('Failed to query base model list', {type: 'error'});
             baseModelList.value = [];
         });
@@ -187,7 +204,12 @@ const getToken = () => {
             }
             coin.value = data.current;
         })
-        .catch(_err => {
+        .catch(err => {
+            if (err.response.status === 401) {
+                global.token = '';
+                global.uuid = '';
+                router.push('/');
+            }
             toaster.show('Failed to query coin quantity', {type: 'error'});
             coin.value = -1;
         });
@@ -218,10 +240,10 @@ function gotoChat() {
 }
 
 function startChatWithRobot(item: any) {
-    let formData = new FormData();
-    formData.append('model', item.base_model);
-    formData.append('prompts', item.system_prompt);
-    conn.post('/chat/new', formData, {
+    conn.post('/chat/new', {
+        model: item.base_model,
+        prompts: item.system_prompt,
+    }, {
         headers: {'Authorization': 'Bearer ' + global.token}
     })
         .then(res => {
@@ -300,17 +322,17 @@ function performSearch() {
         params = {
             type: searchBy.value === 'id' ? 1 : 2,
             string: searchQuery.value,
+            headers: {'Authorization': 'Bearer ' + global.token}
         };
     } else if (searchType.value === 'user') {
         url = '/user/search';
         params = {
             type: searchBy.value === 'uuid' ? 1 : 2,
             input: searchQuery.value,
+            headers: {'Authorization': 'Bearer ' + global.token}
         };
     }
-    conn.get(url, {params}, {
-        headers: {'Authorization': 'Bearer ' + global.token}
-    })
+    conn.get(url, {params})
         .then(res => {
             let data: any = res.data;
             if (typeof data === 'string') {
@@ -467,7 +489,6 @@ async function fetchUserInfo() {
 }
 </script>
 
-
 <template>
     <div class="card-header text-left">
         <div class="text-2xl font-bold flex-none grid grid-cols-2">
@@ -534,8 +555,10 @@ async function fetchUserInfo() {
                     </el-button>
                 </router-link>
             </div>
-
         </div>
+        <el-button @click="startChatWithRobot({system_prompt:'I am GPT', base_model:'gpt-3.5-turbo'})">
+            Create New Chat
+        </el-button>
         <hr class="mt-3 mb-3 col-span-2"/>
     </div>
     <div class="grow mt-1 mb-4 overflow-scroll">
@@ -745,7 +768,7 @@ async function fetchUserInfo() {
         center
     >
         <el-form label-width="auto" v-model="createBotData">
-            <el-form-item lebel="Name" required>
+            <el-form-item label="Name" required>
                 <el-input v-model="createBotData.name" placeholder="Input your bot name"/>
             </el-form-item>
             <el-form-item label="Base Model" required>

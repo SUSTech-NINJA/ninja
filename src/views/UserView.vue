@@ -410,6 +410,9 @@ function inputFile(event: any) {
 
 // Page initialization
 onMounted(() => {
+    if (!global.token) {
+        router.push('/');
+    }
     fetchUserInfo();
     fetchCurrentUserInfo();
 });

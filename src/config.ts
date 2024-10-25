@@ -10,7 +10,7 @@ export const host = 'http://127.0.0.1:4523/m1/5188287-4853858-default';
 export function createConnection() {
     return axios.create({
         baseURL: host,
-        timeout: 1000
+        timeout: 10000
     });
 }
 
