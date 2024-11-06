@@ -17,7 +17,9 @@ const fetchFlag = ref(false), messages = ref([] as any[]), chatInput = ref(''),
     robotid = ref(''), baseModel = ref(''), robotInfo = ref({} as any),
     editingCur = ref(false), titleEditing = ref(""), isSingleRound = ref(false),
     isOptimizingPrompt = ref(false), multimodalType = ref(''),
-    files = ref([] as any[]), newFile = ref(null), newFileName = ref(''), suggestion = ref("");
+    files = ref([] as any[]), fileMimes = ref([] as any[]),
+    newFile = ref(null), newFileName = ref(''), newFileMime = ref(''),
+    suggestion = ref("");
 
 onMounted(() => {
     if (!global.token) return;
@@ -35,6 +37,7 @@ const fetcher = () => {
     getMessages();
     getSuggestions();
     files.value = [];
+    fileMimes.value = [];
 };
 
 const getMessages = () => {
@@ -125,7 +128,8 @@ async function sendChat() {
         let json = {
             'message': chatInput.value,
             'single-round': isSingleRound.value.toString(),
-            'files': JSON.stringify(files.value)
+            'files': JSON.stringify(files.value),
+            'mimetypes': JSON.stringify(fileMimes.value)
         };
         chatInput.value = '';
         suggestion.value = '';
@@ -187,8 +191,7 @@ function getSuggestions() {
         headers: {'Authorization': 'Bearer ' + global.token}
     })
         .then(res => {
-            let data = res.data;
-            suggestion.value = data;
+            suggestion.value = res.data;
         })
         .catch(err => {
             console.log(err);
@@ -228,6 +231,7 @@ function openMultimodalDialog(type: string) {
     global.dialogs.multimodal = true;
     newFile.value = null;
     newFileName.value = '';
+    newFileMime.value = '';
     multimodalType.value = type;
 }
 
@@ -235,9 +239,16 @@ function inputFile(event: any) {
     newFileName.value = event.target.files[0].name;
     let fileReader = new FileReader();
     fileReader.readAsDataURL(event.target.files[0]);
-    fileReader.onload = function (e) {
-        newFile.value = e.target?.result as any;
-    };
+    if (event.target.files[0].type !== '')
+        fileReader.onload = function (e) {
+            newFile.value = e.target?.result as any;
+            newFileMime.value = event.target.files[0].type;
+        };
+    else {
+        newFile.value = null;
+        newFileName.value = '';
+        toaster.show('Invalid file type', {type: 'error'});
+    }
 }
 
 function removeFile(name: string) {
@@ -265,6 +276,7 @@ function startRecord() {
                 toaster.success('Voice recorded');
                 newFile.value = URL.createObjectURL(blob) as any;
                 newFileName.value = 'voice' + startTime.value + '.ogg';
+                newFileMime.value = 'audio/ogg';
                 if (timingTimeout !== null) {
                     clearInterval(timingTimeout);
                     startTime.value = null;
@@ -285,7 +297,8 @@ function startRecord() {
 }
 
 const getParsedDuration = computed(() => {
-    if (startTime.value === null) {
+    if (startTime.value === null || curTime.value === null
+        || typeof startTime.value === 'undefined' || typeof curTime.value === 'undefined') {
         return '0:00';
     }
     let diff = curTime.value - startTime.value;
@@ -317,6 +330,7 @@ function submitFile() {
         'file': newFile.value,
         'name': newFileName.value
     } as FileInfo);
+    fileMimes.value.push(newFileMime.value);
     global.dialogs.multimodal = false;
 }
 
