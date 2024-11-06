@@ -13,6 +13,12 @@ export function createConnection() {
         timeout: 10000
     });
 }
+export const baseModels =[
+    'gpt-3.5-turbo',
+    'gpt-4',
+    'gpt-4o',
+    'gpt-o1'
+]
 
 export function todo() {
     alert("Not yet implemented");

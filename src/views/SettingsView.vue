@@ -61,13 +61,21 @@
         </div>
 
         <div class="bottom-buttons">
-            <el-button type="primary" @click="exportModelEvaluation">
-                Export Model Comments
-            </el-button>
-            <el-button type="primary" @click="exportUserInfo">
-                Export User Information
-            </el-button>
+
+            <el-tooltip content="Add A New Base-Modal" placement="top">
+                <el-button :icon="Plus" circle class="left-icon-button" @click="openAddingDialog" />
+            </el-tooltip>
+
+            <div class="right-buttons">
+                <el-button type="primary" @click="exportModelEvaluation">
+                    Export Model Comments
+                </el-button>
+                <el-button type="primary" @click="exportUserInfo">
+                    Export User Information
+                </el-button>
+            </div>
         </div>
+
 
         <!-- Setting dialog -->
         <el-dialog
@@ -95,28 +103,67 @@
                 <el-button @click="settingDialogVisible = false">Cancel</el-button>
       </span>
         </el-dialog>
+
+        <!-- Add dialog -->
+        <el-dialog
+            title="Model Addiing"
+            v-model="AddDialogVisible"
+        >
+            <el-form>
+                <el-form-item label="Name">
+                    <el-input v-model="settingModel.name" />
+                </el-form-item>
+                <el-form-item label="ID">
+                    <el-select v-model="settingModel.id" placeholder="Select a ID">
+                        <el-option
+                            v-for="model in baseModels"
+                            :key="model"
+                            :label="model"
+                            :value="model"
+                        />
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="Tokens Limit">
+                    <el-input v-model="settingModel.tokensLimit" />
+                </el-form-item>
+                <el-form-item label="Tokens Price">
+                    <el-input v-model="settingModel.tokensPrice" />
+                </el-form-item>
+            </el-form>
+
+            <span slot="footer" class="dialog-footer">
+
+        <el-button type="primary" @click="onDialogConfirm">Add</el-button>
+                <el-button @click="AddDialogVisible = false">Cancel</el-button>
+      </span>
+        </el-dialog>
+
     </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { ElMessage } from 'element-plus';
-import { Close } from "@element-plus/icons-vue";
+import { Close, Plus} from "@element-plus/icons-vue";
 import { createConnection } from "../config";
 import { useGlobalStore } from "../stores/global";
+import { baseModels} from "../config";
 
 const models = ref([]);
 const global = useGlobalStore();
 
 const settingDialogVisible = ref(false);
+const AddDialogVisible = ref(false);
 const InputEnable = ref(true);
 const settingModel = ref({
     id: '',
     robotid: '',
     name: '',
     tokensLimit: '',
-    tokensPrice: ''
+    tokensPrice: '',
+    icon: '',
 });
+
 
 const headerCellStyle = {
     backgroundColor: '#f5f7fa',
@@ -133,7 +180,7 @@ const fetchModels = () => {
         .then(response => {
             models.value = response.data.map((item: any) => ({
                 name: item.name,
-                tokensLimit: item.modal_tokens_limitation,
+                tokensLimit: item.model_tokens_limitation,
                 tokensPrice: item.price,
                 robotid: item.robotid,
                 id: item.id,
@@ -147,6 +194,7 @@ const fetchModels = () => {
         });
 };
 
+
 onMounted(() => {
     if (!global.token) return;
     fetchModels();
@@ -157,15 +205,47 @@ const openSettingDialog = (row: any) => {
     settingDialogVisible.value = true;
     InputEnable.value = false;
 };
+const openAddingDialog = (row: any) => {
+    settingModel.value = { ...row };
+    AddDialogVisible.value = true;
+    InputEnable.value = true;
+
+}
+// const addNewModal = () => {
+//     let formData = new FormData();
+//     formData.append('name', settingModel.value.name);
+//     formData.append('model_tokens_limitation', settingModel.value.tokensLimit);
+//     formData.append('id' , settingModel.value.id);
+//     formData.append('price', settingModel.value.tokensPrice);
+//     conn.post('/admin/robot/add', {
+//         data: formData
+//     }, {
+//         headers: { 'Authorization': 'Bearer ' + global.token }
+//     })
+//         .then(() => {
+//             ElMessage({
+//                 type: 'success',
+//                 message: 'Add successfully',
+//             });
+//             fetchModels();
+//         })
+//         .catch(() => {
+//             ElMessage({
+//                 type: 'error',
+//                 message: 'Failed to add model',
+//             });
+//         });
+// }
 
 const onDialogConfirm = () => {
-    const base_modal_id = settingModel.value.id;
+    const base_model_id = settingModel.value.id;
     let formData = new FormData();
     formData.append('name', settingModel.value.name);
-    formData.append('modal_tokens_limitation', settingModel.value.tokensLimit);
+    formData.append('id', settingModel.value.id);
+    formData.append('model_tokens_limitation', settingModel.value.tokensLimit);
     formData.append('price', settingModel.value.tokensPrice);
 
-    conn.post(`/admin/robot/update/${base_modal_id}`, {
+    conn.post(`/admin/robot/update/${base_model_id}`, {
         data: formData
     }, {
         headers: { 'Authorization': 'Bearer ' + global.token }
@@ -178,6 +258,7 @@ const onDialogConfirm = () => {
             fetchModels();
             InputEnable.value = true;
             settingDialogVisible.value = false;
+            AddDialogVisible.value = false;
         })
         .catch(() => {
             ElMessage({
@@ -189,9 +270,9 @@ const onDialogConfirm = () => {
 
 const deleteModel = (index: number) => {
     const model = models.value[index];
-    const base_modal_id = model.id;
+    const base_model_id = model.id;
     conn.delete(`/admin/robot/update/1`, {
-        data: { base_modal_id },
+        data: { base_model_id },
         headers: { 'Authorization': 'Bearer ' + global.token }
     })
         .then(() => {
@@ -246,5 +327,8 @@ const exportUserInfo = () => {
 .el-table th.is-leaf {
     background-color: #f5f7fa !important;
     font-weight: bold;
+}
+.left-icon-button {
+    margin-right: auto;
 }
 </style>
