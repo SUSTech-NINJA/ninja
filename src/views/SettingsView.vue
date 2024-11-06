@@ -83,6 +83,16 @@
             v-model="settingDialogVisible"
         >
             <el-form>
+                <el-form-item label="Icon">
+                    <ElAvatar :src="settingModel.icon"/>
+                    <ElButton class="ml-2">
+                        Select File
+                        <input type="file" @change="inputFile" class="opacity-0 absolute top-0 right-0 left-0 bottom-0 cursor-pointer"
+                        />
+                    </ElButton>
+                    <span class="ml-2.5 text-gray-500">{{ settingModel.filename }}</span>
+
+                </el-form-item>
                 <el-form-item label="Name">
                     <el-input v-model="settingModel.name" />
                 </el-form-item>
@@ -109,6 +119,17 @@
             title="Model Addiing"
             v-model="AddDialogVisible"
         >
+            <el-form-item label="Icon">
+                <ElAvatar :src="settingModel.icon"/>
+                <ElButton class="ml-2">
+                    Select File
+                    <input type="file" @change="inputFile" class="opacity-0 absolute top-0 right-0 left-0 bottom-0 cursor-pointer"
+                    />
+                </ElButton>
+                <span class="ml-2.5 text-gray-500">{{ settingModel.filename }}</span>
+
+            </el-form-item>
+
             <el-form>
                 <el-form-item label="Name">
                     <el-input v-model="settingModel.name" />
@@ -144,7 +165,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { ElMessage } from 'element-plus';
-import { Close, Plus} from "@element-plus/icons-vue";
+import {Close, Plus, Select} from "@element-plus/icons-vue";
 import { createConnection } from "../config";
 import { useGlobalStore } from "../stores/global";
 import { baseModels} from "../config";
@@ -162,6 +183,7 @@ const settingModel = ref({
     tokensLimit: '',
     tokensPrice: '',
     icon: '',
+    filename: '',
 });
 
 
@@ -289,6 +311,15 @@ const deleteModel = (index: number) => {
             });
         });
 };
+function inputFile(event: any){
+    settingModel.value.filename = event.target.files[0].name;
+    const file = event.target.files[0];
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = function (e) {
+        settingModel.value.icon = e.target?.result as any;
+    };
+}
 
 const exportModelEvaluation = () => {
     ElMessage({
