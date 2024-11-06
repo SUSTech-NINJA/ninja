@@ -276,6 +276,7 @@ function startRecord() {
                 toaster.success('Voice recorded');
                 newFile.value = URL.createObjectURL(blob) as any;
                 newFileName.value = 'voice' + startTime.value + '.ogg';
+                newFileMime.value = 'audio/ogg';
                 if (timingTimeout !== null) {
                     clearInterval(timingTimeout);
                     startTime.value = null;
@@ -296,7 +297,8 @@ function startRecord() {
 }
 
 const getParsedDuration = computed(() => {
-    if (startTime.value === null) {
+    if (startTime.value === null || curTime.value === null
+        || typeof startTime.value === 'undefined' || typeof curTime.value === 'undefined') {
         return '0:00';
     }
     let diff = curTime.value - startTime.value;
