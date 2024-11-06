@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {FileInfo, useChatStore} from "../stores/chat";
 import {computed, onMounted, ref} from "vue";
-import {createConnection, host, toasterOptions} from "../config";
+import {createConnection, host, toasterOptions, visualModels} from "../config";
 import {createToaster} from "@meforma/vue-toaster";
 import {ArrowDown, Check, Cpu, Delete, EditPen, More, User} from "@element-plus/icons-vue"; //@ts-ignore
 import RatePanel from "../components/RatePanel.vue";
@@ -125,12 +125,18 @@ async function sendChat() {
             content: ''
         });
         let last = messages.value.length - 1;
+        let sources = [];
+        for (let i = 0; i < files.value.length; i++) {
+            sources.push(files.value[i].file);
+        }
         let json = {
             'message': chatInput.value,
             'single-round': isSingleRound.value.toString(),
-            'files': JSON.stringify(files.value),
+            'files': JSON.stringify(sources),
             'mimetypes': JSON.stringify(fileMimes.value)
         };
+        files.value = [];
+        fileMimes.value = [];
         chatInput.value = '';
         suggestion.value = '';
         const res = await fetch(host + '/chat/' + chat.current, {
@@ -151,6 +157,10 @@ async function sendChat() {
                 if (done) break;
                 messages.value[last].content += new TextDecoder().decode(value);
             }
+        }
+        try {
+            messages.value[last].content = JSON.parse(messages.value[last].content);
+        } catch (_e) {
         }
         conn.get('/title/' + chat.current, {
             headers: {'Authorization': 'Bearer ' + global.token}
@@ -401,7 +411,18 @@ function toggleInput(input: string) {
                     <div>
                         <el-card shadow="never" class="ml-3 mr-3 text-sm w-fit"
                                  :class="item.role === 'user' ? 'bg-blue-50 text-right' : 'bg-neutral-50 text-left'">
-                            {{ item.content }}
+                            <span v-if="typeof item.content == 'string'">{{ item.content }}</span>
+                            <span v-else>
+                                <p v-for="part in item.content">
+                                    <span v-if="part.hasOwnProperty('text')">
+                                        {{ part.text }}
+                                    </span>
+                                    <span v-else-if="part.hasOwnProperty('image_url')">
+                                        <el-image :src="part['image_url']['url']" class="w-32 h-32"/>
+                                    </span>
+                                    <span v-else>{{ part }}</span>
+                                </p>
+                            </span>
                         </el-card>
                         <div class="text-xs text-gray-500 text-left ml-3 mr-3"
                              v-if="isLastAssistantMsg(item.role, index)">
@@ -426,9 +447,9 @@ function toggleInput(input: string) {
                     <el-button @click="isSingleRound = !isSingleRound" type="text">
                         {{ isSingleRound ? 'Single Round: Enabled' : 'Single Round: Disabled' }}
                     </el-button>
-                    <el-dropdown class="ml-2.5">
+                    <el-dropdown class="ml-2.5" v-if="visualModels.includes(baseModel)">
                         <el-button type="text">
-                            Multimodal{{ files.length > 0 ? ': ' + files.length + ' files' : '' }}
+                            Files{{ files.length > 0 ? ': ' + files.length + ' files' : '' }}
                             <el-icon class="el-icon--right">
                                 <ArrowDown/>
                             </el-icon>
