@@ -143,13 +143,12 @@ async function fetchCurrentUserInfo() {
 async function updateUserInfo() {
     try {
         const formData = new FormData();
-        formData.append('Username', userInfo.value.username);
+        formData.append('username', userInfo.value.username);
         formData.append('intro', userInfo.value.intro);
-        formData.append('Email', userInfo.value.email);
+        formData.append('email', userInfo.value.email);
         formData.append('icon', userInfo.value.avatar); // Using base64 data
-        formData.append('uuid', global.uuid);
 
-        const response = await api.post('/update/1', formData, {
+        const response = await api.post('/update/'+global.uuid, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
                 'Authorization': 'Bearer ' + global.token
@@ -159,6 +158,7 @@ async function updateUserInfo() {
         if (response.status === 200) {
             ElMessage.success('User info updated successfully');
             editMode.value = false;
+            fetchUserInfo();
         } else {
             ElMessage.error('Failed to update user info');
         }
