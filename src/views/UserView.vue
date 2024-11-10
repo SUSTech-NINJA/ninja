@@ -99,6 +99,8 @@ async function fetchUserInfo() {
             userInfo.value.rate = data.UserInfo.rate;
             robots.value = data.robot ? data.robot.slice(0, 3) : []; // Only show 3 robots
             posts.value = data.post || [];
+            selectedPost.value = posts.value[selectedPostId.value as any];
+
         }
     } catch (error) {
         ElMessage.error('Failed to fetch user info');
@@ -141,13 +143,13 @@ async function fetchCurrentUserInfo() {
 async function updateUserInfo() {
     try {
         const formData = new FormData();
-        formData.append('name', userInfo.value.username);
+        formData.append('Username', userInfo.value.username);
         formData.append('intro', userInfo.value.intro);
-        formData.append('email', userInfo.value.email);
+        formData.append('Email', userInfo.value.email);
         formData.append('icon', userInfo.value.avatar); // Using base64 data
         formData.append('uuid', global.uuid);
 
-        const response = await api.post('/settings', formData, {
+        const response = await api.post('/update/1', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
                 'Authorization': 'Bearer ' + global.token
@@ -209,19 +211,9 @@ async function sendChatReply() {
         return;
     }
     try {
-        const payload = {
-            conversation: JSON.stringify({
-                content: chatReplyContent.value,
-                icon: currentUserInfo.value.avatar,
-                postid: '',
-                time: dayjs().format('YYYY-MM-DD HH:mm:ss'),
-                type: 'query',
-                userid: global.uuid,
-                responses: {},
-            }),
-            icon: currentUserInfo.value.avatar,
-            uuid: chatWithUser.value,
-        };
+        let formData = new FormData();
+        formData.append('content', chatReplyContent.value);
+        formData.append('uuid', global.uuid);
         const response = await api.post('/send_message', payload, {
             headers: {'Authorization': 'Bearer ' + global.token}
         });
@@ -245,21 +237,19 @@ async function publishPost() {
         return;
     }
     try {
-        const payload = {
-            content: newPostContent.value,
-            icon: currentUserInfo.value.avatar,
-            name: currentUserInfo.value.username,
-            uuid: userInfo.value.uuid, // Recipient's UUID
-        };
-        const response = await api.post('/post', payload, {
+        let formData = new FormData();
+        formData.append('content', newPostContent.value);
+        formData.append('icon', currentUserInfo.value.avatar);
+        formData.append('uuid', global.uuid);
+        formData.append('name',currentUserInfo.value.username);
+        const response = await api.post('/post', formData, {
             headers: {'Authorization': 'Bearer ' + global.token}
         });
         if (response.status === 200) {
             ElMessage.success('Post published successfully');
             newPostContent.value = '';
             showPostDialog.value = false;
-            // Update posts list
-            await fetchUserInfo();
+            await fetchPosts();
         } else {
             ElMessage.error('Failed to publish post');
         }
@@ -268,41 +258,34 @@ async function publishPost() {
     }
 }
 
-// Send a private message
+// Send a private post message
 async function sendPrivateMessage(mode: string) {
     if (newComment.value.trim() === '') {
         ElMessage.warning('Content cannot be empty');
         return;
     }
     try {
-        const payload = {
-            conversation: JSON.stringify({
-                content: newComment.value,
-                icon: currentUserInfo.value.avatar,
-                postid: '',
-                time: dayjs().format('YYYY-MM-DD HH:mm:ss'),
-                type: 'query',
-                userid: global.uuid,
-                responses: {},
-            }),
-            icon: currentUserInfo.value.avatar,
-            uuid: userInfo.value.uuid,
-        };
-        const response = await api.post('/send_message', payload, {
+        let formData = new FormData();
+        formData.append('content', newComment.value);
+        formData.append('icon', currentUserInfo.value.avatar);
+        formData.append('uuid', global.uuid);
+        formData.append('username',currentUserInfo.value.username);
+        formData.append('postid', selectedPostId.value);
+        api.post('/response',{
+            data : formData,
+        },{
             headers: {'Authorization': 'Bearer ' + global.token}
-        });
-        if (response.status === 200) {
-            ElMessage.success('Message sent successfully');
-            newComment.value = '';
-            showMessageDialog.value = false;
-        } else {
-            ElMessage.error('Failed to send message');
-        }
-        if (mode === 'message') {
-            await fetchMessages();
-        } else if (mode === 'post') {
-            await fetchPosts();
-        }
+        })
+            .then(res => {
+                ElMessage.success('Message sent successfully');
+                newComment.value = '';
+                fetchUserInfo();
+
+            })
+            .catch(err => {
+                ElMessage.error('Failed to send message');
+        })
+
     } catch (error) {
         ElMessage.error('Failed to send message');
     }
@@ -330,6 +313,7 @@ async function rateUser() {
         if (response.status === 200) {
             ElMessage.success('Rating sent successfully');
             showRateDialog.value = false;
+            newRating.value = 0;
         } else {
             ElMessage.error('Failed to send rating');
         }
@@ -791,13 +775,13 @@ onMounted(() => {
                             >
                                 <div class="flex items-center mb-2">
                                     <ElAvatar :src="chat.icon" size="small"/>
-                                    <span class="ml-2">{{ chat.userid }}</span>
+                                    <span class="ml-2">{{ chat.sender }}</span>
                                     <span class="ml-auto text-gray-500">
-                    {{ getTimeString(chat.time) }}
-                  </span>
+                                        {{chat.timestamp}}
+                                </span>
                                 </div>
                                 <el-card shadow="never" class="ml-3 mr-3 text-sm w-fit user-dialog-chat"
-                                         :class="chat.userid === global.uuid ? 'bg-blue-50' : 'bg-neutral-50'">
+                                         :class="chat.sender === global.uuid ? 'bg-blue-50' : 'bg-neutral-50'">
                                     {{ chat.content }}
                                 </el-card>
                             </div>
