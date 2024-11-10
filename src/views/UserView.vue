@@ -98,6 +98,7 @@ async function fetchUserInfo() {
             userInfo.value.uuid = data.UserInfo.uuid;
             userInfo.value.rate = data.UserInfo.rate;
             robots.value = data.robot ? data.robot.slice(0, 3) : []; // Only show 3 robots
+            console.log(data.post)
             posts.value = data.post || [];
             selectedPost.value = posts.value[selectedPostId.value as any];
 
@@ -412,17 +413,24 @@ onMounted(() => {
                 </h1>
             </div>
             <div class="text-right flex items-center justify-end">
-                <a @click="openMessages" class="cursor-pointer mr-4">
+                <!-- Logout Button -->
+                <ElButton v-if="isOwnProfile" @click="logOut">Logout</ElButton>
+                <el-button
+                    :disabled="!isOwnProfile"
+                    @click="openMessages"
+                    class="mr-2.5 mb-1.5 mt-1" link
+                >
                     <ElIcon>
-                        <ChatDotRound/>
+                        <ChatDotRound />
                     </ElIcon>
-                </a>
-                <RouterLink to="/">
+                </el-button>
+                <RouterLink to="/" class="mt-1">
                     <ElIcon>
                         <Close/>
                     </ElIcon>
                 </RouterLink>
             </div>
+
         </div>
 
         <!-- User Info Section -->
@@ -608,17 +616,14 @@ onMounted(() => {
                         <span class="ml-auto text-gray-500">{{ getTimeString(post.time) }}</span>
                     </div>
                     <p class="text-left text-gray-700">{{ post.content }}</p>
-                    <div v-if="post.type === 'rate'" class="mt-1">
-                        <ElRate :model-value="post.rate" disabled allow-half class="ml-1"/>
-                    </div>
+<!--                    <div v-if="post.type === 'rate'" class="mt-1">-->
+<!--                        <ElRate :model-value="post.rate" disabled allow-half class="ml-1"/>-->
+<!--                    </div>-->
                 </ElCard>
             </div>
         </div>
 
-        <!-- Logout Button -->
-        <div v-if="isOwnProfile" class="w-full text-center mt-8">
-            <ElButton @click="logOut">Logout</ElButton>
-        </div>
+
 
         <!-- Post Details Modal -->
         <ElDialog
@@ -824,5 +829,12 @@ onMounted(() => {
 
 .el-rate {
     height: fit-content;
+}
+
+.cursor-not-allowed {
+    cursor: not-allowed;
+}
+.opacity-50 {
+    opacity: 0.5;
 }
 </style>
