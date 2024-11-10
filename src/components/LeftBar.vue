@@ -2,7 +2,7 @@
 import {useChatStore} from "../stores/chat";
 import {computed, onMounted, ref, watch} from "vue";
 import {ArrowDown, Close, MagicStick, Plus, Search, Setting, User} from "@element-plus/icons-vue";
-import {addActiveClass, addHoverClass, getTimeString, removeActiveClass, removeHoverClass} from "../util";
+import {addActiveClass, addHoverClass, removeActiveClass, removeHoverClass} from "../util";
 import {createConnection, toasterOptions} from "../config";
 import {createToaster} from "@meforma/vue-toaster";
 import {useRoute, useRouter} from "vue-router";
@@ -514,7 +514,7 @@ async function fetchUserInfo() {
                          v-on:mouseup="removeActiveClass" @click="startChatWithRobot(item)">
                         - {{ item?.robot_name }}
                     </div>
-                    <el-dropdown placement="bottom" class="!w-full" :disabled="robotList.length < 5">
+                    <el-dropdown placement="bottom" class="!w-full" v-if="robotList.length >= 5">
                         <div
                             class="text-xs el-select-dropdown__item h-fit mt-0.5 p-1 pl-0.5"
                             v-on:mouseenter="addHoverClass"
@@ -567,7 +567,6 @@ async function fetchUserInfo() {
                  @click="chat.current = item.chatid; fetchFlag = !fetchFlag; gotoChat()">
             <div class="flex-none w-full text-left">
                 <p class="text-normal mb-1">{{ item.title }}</p>
-                <p class="text-xs">{{ getTimeString(item.time) }}</p>
             </div>
             <el-popconfirm title="Are you sure to delete this?" @confirm="() => removeChat(item.chatid)">
                 <template #reference>

@@ -186,12 +186,12 @@ async function sendChat() {
 }
 
 function clearContext() {
-    conn.post('/chat/clear/' + (curChat.value as any).chatid, {
+    conn.post('/chat/clear/' + (curChat.value as any).chatid, {}, {
         headers: {'Authorization': 'Bearer ' + global.token}
     })
         .then(_res => {
             toaster.show('Context cleared', {type: 'success'});
-            chat.current = '';
+            fetcher();
         })
         .catch(err => {
             console.log(err);

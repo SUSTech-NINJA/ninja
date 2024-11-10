@@ -28,7 +28,10 @@ function submitRating() {
             global.dialogs.rate = false;
         })
         .catch(err => {
-            toaster.show('Rating failed', {type: 'error'});
+            if (err.status === 403) {
+                toaster.show('You already rated', {type: 'error'});
+            } else
+                toaster.show('Rating failed', {type: 'error'});
         });
 }
 
