@@ -21,7 +21,8 @@ function login() {
     }
     loginLoading.value = true;
     let formData = new FormData();
-    formData.append('username', loginForm.value.username);
+    let username = loginForm.value.username;
+    formData.append('username', username);
     formData.append('password', loginForm.value.password);
     conn.post('/login', formData)
         .then(res => {
@@ -35,6 +36,7 @@ function login() {
                 }
                 global.uuid = json.userid;
                 global.token = json.token;
+                global.username = username;
                 setTimeout(() => {
                     location.reload();
                 }, 500);

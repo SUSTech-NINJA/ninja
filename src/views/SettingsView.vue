@@ -7,7 +7,7 @@
             <div class="text-right">
                 <router-link to="/">
                     <el-icon>
-                        <Close />
+                        <Close/>
                     </el-icon>
                 </router-link>
             </div>
@@ -73,7 +73,7 @@
         <div class="bottom-buttons">
 
             <el-tooltip content="Add A New Base-Modal" placement="top">
-                <el-button :icon="Plus" circle class="left-icon-button" @click="openAddingDialog" />
+                <el-button :icon="Plus" circle class="left-icon-button" @click="openAddingDialog"/>
             </el-tooltip>
 
             <div class="right-buttons">
@@ -97,52 +97,84 @@
                     <ElAvatar :src="settingModel.icon"/>
                     <ElButton class="ml-2">
                         Select File
-                        <input type="file" @change="inputFile" class="opacity-0 absolute top-0 right-0 left-0 bottom-0 cursor-pointer"
+                        <input type="file" @change="inputFile"
+                               class="opacity-0 absolute top-0 right-0 left-0 bottom-0 cursor-pointer"
                         />
                     </ElButton>
                     <span class="ml-2.5 text-gray-500">{{ settingModel.filename }}</span>
 
                 </el-form-item>
                 <el-form-item label="Name">
-                    <el-input v-model="settingModel.name" />
+                    <el-input v-model="settingModel.name"/>
                 </el-form-item>
                 <el-form-item label="ID">
-                    <el-input v-model="settingModel.id" :disabled="!InputEnable" />
+                    <el-input v-model="settingModel.id" :disabled="!InputEnable"/>
                 </el-form-item>
                 <el-form-item label="Tokens Limit">
-                    <el-input v-model="settingModel.tokensLimit" />
+                    <el-input v-model="settingModel.tokensLimit"/>
                 </el-form-item>
                 <el-form-item label="Tokens Price">
-                    <el-input v-model="settingModel.tokensPrice" />
+                    <el-input v-model="settingModel.tokensPrice"/>
                 </el-form-item>
             </el-form>
 
             <span slot="footer" class="dialog-footer">
 
-        <el-button type="primary" @click="onDialogConfirm">Confirm</el-button>
+        <el-button type="primary" @click="onDialogConfirm('update')">Confirm</el-button>
                 <el-button @click="settingDialogVisible = false">Cancel</el-button>
       </span>
         </el-dialog>
 
+        <!-- Export dialog -->
+        <el-dialog
+            title="Export Model Evaluation"
+            v-model="modelEvalDialog"
+        >
+            <el-form>
+                <el-form-item label="Select item">
+                    <el-dropdown>
+                        <span class="el-dropdown-link">
+                          {{ curModel == null ? 'Select item' : curModel?.name }}
+                          <el-icon class="el-icon--right">
+                            <arrow-down/>
+                          </el-icon>
+                        </span>
+                        <template #dropdown>
+                            <el-dropdown-menu>
+                                <el-dropdown-item v-for="model in models" :key="model.id" @click="curModel = model">
+                                    {{ model.name }}
+                                </el-dropdown-item>
+                            </el-dropdown-menu>
+                        </template>
+                    </el-dropdown>
+                </el-form-item>
+            </el-form>
+            <template #footer>
+                <div class="dialog-footer">
+                    <el-button type="primary" @click="exportModelEval">Export</el-button>
+                </div>
+            </template>
+        </el-dialog>
+
         <!-- Add dialog -->
         <el-dialog
-            title="Model Addiing"
+            title="Add a Model"
             v-model="AddDialogVisible"
         >
             <el-form-item label="Icon">
                 <ElAvatar :src="settingModel.icon"/>
                 <ElButton class="ml-2">
                     Select File
-                    <input type="file" @change="inputFile" class="opacity-0 absolute top-0 right-0 left-0 bottom-0 cursor-pointer"
+                    <input type="file" @change="inputFile"
+                           class="opacity-0 absolute top-0 right-0 left-0 bottom-0 cursor-pointer"
                     />
                 </ElButton>
                 <span class="ml-2.5 text-gray-500">{{ settingModel.filename }}</span>
-
             </el-form-item>
 
             <el-form>
                 <el-form-item label="Name">
-                    <el-input v-model="settingModel.name" />
+                    <el-input v-model="settingModel.name"/>
                 </el-form-item>
                 <el-form-item label="ID">
                     <el-select v-model="settingModel.id" placeholder="Select a ID">
@@ -155,16 +187,16 @@
                     </el-select>
                 </el-form-item>
                 <el-form-item label="Tokens Limit">
-                    <el-input v-model="settingModel.tokensLimit" />
+                    <el-input v-model="settingModel.tokensLimit"/>
                 </el-form-item>
                 <el-form-item label="Tokens Price">
-                    <el-input v-model="settingModel.tokensPrice" />
+                    <el-input v-model="settingModel.tokensPrice"/>
                 </el-form-item>
             </el-form>
 
             <span slot="footer" class="dialog-footer">
 
-        <el-button type="primary" @click="onDialogConfirm">Add</el-button>
+        <el-button type="primary" @click="onDialogConfirm('add')">Add</el-button>
                 <el-button @click="AddDialogVisible = false">Cancel</el-button>
       </span>
         </el-dialog>
@@ -173,14 +205,14 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import { ElMessage } from 'element-plus';
-import {Close, Plus, Select} from "@element-plus/icons-vue";
-import { createConnection } from "../config";
-import { useGlobalStore } from "../stores/global";
-import { baseModels} from "../config";
+import {onMounted, ref} from 'vue';
+import {ArrowDown, Close, Plus} from "@element-plus/icons-vue";
+import {baseModels, createConnection, toasterOptions} from "../config";
+import {useGlobalStore} from "../stores/global";
+import {createToaster} from "@meforma/vue-toaster";
 
-const models = ref([]);
+const toaster = createToaster(toasterOptions);
+const models = ref([] as any[]), curModel = ref<any>(null);
 const global = useGlobalStore();
 
 const settingDialogVisible = ref(false);
@@ -207,7 +239,7 @@ const conn = createConnection();
 
 const fetchModels = () => {
     conn.get('/admin/robot', {
-        headers: { 'Authorization': 'Bearer ' + global.token }
+        headers: {'Authorization': 'Bearer ' + global.token}
     })
         .then(response => {
             models.value = response.data.map((item: any) => ({
@@ -220,10 +252,7 @@ const fetchModels = () => {
             }));
         })
         .catch(_error => {
-            ElMessage({
-                type: 'error',
-                message: 'Failed to fetch models',
-            });
+            toaster.error('Failed to fetch models');
         });
 };
 
@@ -234,95 +263,61 @@ onMounted(() => {
 });
 
 const openSettingDialog = (row: any) => {
-    settingModel.value = { ...row };
+    settingModel.value = {...row};
     settingDialogVisible.value = true;
     InputEnable.value = false;
 };
 const openAddingDialog = (row: any) => {
-    settingModel.value = { ...row };
+    settingModel.value = {...row};
     AddDialogVisible.value = true;
     InputEnable.value = true;
-
 }
-// const addNewModal = () => {
-//     let formData = new FormData();
-//     formData.append('name', settingModel.value.name);
-//     formData.append('model_tokens_limitation', settingModel.value.tokensLimit);
-//     formData.append('id' , settingModel.value.id);
-//     formData.append('price', settingModel.value.tokensPrice);
-//     conn.post('/admin/robot/add', {
-//         data: formData
-//     }, {
-//         headers: { 'Authorization': 'Bearer ' + global.token }
-//     })
-//         .then(() => {
-//             ElMessage({
-//                 type: 'success',
-//                 message: 'Add successfully',
-//             });
-//             fetchModels();
-//         })
-//         .catch(() => {
-//             ElMessage({
-//                 type: 'error',
-//                 message: 'Failed to add model',
-//             });
-//         });
-// }
 
-const onDialogConfirm = () => {
+const onDialogConfirm = (mode: string) => {
     const base_model_id = settingModel.value.id;
     let formData = new FormData();
-    formData.append('name', settingModel.value.name);
-    formData.append('id', settingModel.value.id);
+    formData.append('base_model_name', settingModel.value.name);
+    formData.append('base_model_id', settingModel.value.id);
     formData.append('model_tokens_limitation', settingModel.value.tokensLimit);
     formData.append('price', settingModel.value.tokensPrice);
+    formData.append('icon', settingModel.value.icon);
 
-    conn.post(`/admin/robot/update/${base_model_id}`, {
-        data: formData
-    }, {
-        headers: { 'Authorization': 'Bearer ' + global.token }
+    let connStr = `/admin/robot/${mode}`;
+    if (mode === 'update') {
+        connStr += `/${base_model_id}`;
+    }
+    conn.post(connStr, formData, {
+        headers: {'Authorization': 'Bearer ' + global.token}
     })
         .then(() => {
-            ElMessage({
-                type: 'success',
-                message: 'Update successfully',
-            });
+            toaster.success('Update successfully');
             fetchModels();
             InputEnable.value = true;
             settingDialogVisible.value = false;
             AddDialogVisible.value = false;
         })
-        .catch(() => {
-            ElMessage({
-                type: 'error',
-                message: 'Failed to update model',
-            });
+        .catch((e) => {
+            console.log(e);
+            toaster.error('Failed to update model');
         });
 };
 
 const deleteModel = (index: number) => {
     const model = models.value[index];
     const base_model_id = model.id;
-    conn.delete(`/admin/robot/update/1`, {
-        data: { base_model_id },
-        headers: { 'Authorization': 'Bearer ' + global.token }
+    conn.delete(`/admin/robot/update/${base_model_id}`, {
+        headers: {'Authorization': 'Bearer ' + global.token}
     })
         .then(() => {
-            ElMessage({
-                type: 'success',
-                message: 'Delete successfully',
-            });
+            toaster.success('Delete successfully');
             fetchModels();
         })
         .catch(() => {
-            ElMessage({
-                type: 'error',
-                message: 'Failed to delete model',
-            });
+            toaster.error('Failed to delete model');
         });
 };
-function inputFile(event: any){
+
+function inputFile(event: any) {
     settingModel.value.filename = event.target.files[0].name;
     const file = event.target.files[0];
     const reader = new FileReader();
@@ -332,17 +327,52 @@ function inputFile(event: any){
     };
 }
 
+const modelEvalDialog = ref(false);
 const exportModelEvaluation = () => {
-    ElMessage({
-        type: 'info',
-        message: '导出Model评价功能暂未实现',
-    });
+    modelEvalDialog.value = true;
 };
 
+function exportModelEval() {
+    if (curModel == null) {
+        toaster.error('Please select a model');
+        return;
+    }
+    const modelId = curModel.value.id;
+    conn.get(`/admin/export/comment/${modelId}`, {
+        headers: {'Authorization': 'Bearer ' + global.token},
+        responseType: 'blob',
+    })
+        .then(response => {
+            let blob = new Blob([response.data], {type: 'application/vnd.ms-excel'});
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${curModel.value.name}_evaluation.xls`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            modelEvalDialog.value = false;
+        })
+        .catch((e) => {
+            console.log(e);
+            toaster.error('Failed to export model evaluation');
+        });
+}
+
 const exportUserInfo = () => {
-    ElMessage({
-        type: 'info',
-        message: '导出用户信息功能暂未实现',
+    conn.get('/admin/export/summary', {
+        headers: {'Authorization': 'Bearer ' + global.token},
+        responseType: 'blob',
+    }).then(response => {
+        let blob = new Blob([response.data], {type: 'application/vnd.ms-excel'});
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'user_info.xls';
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }).catch((e) => {
+        console.log(e);
+        toaster.error('Failed to export user information');
     });
 };
 </script>
@@ -370,9 +400,11 @@ const exportUserInfo = () => {
     background-color: #f5f7fa !important;
     font-weight: bold;
 }
+
 .left-icon-button {
     margin-right: auto;
 }
+
 .robot-icon {
     width: 50px;
     height: 50px;

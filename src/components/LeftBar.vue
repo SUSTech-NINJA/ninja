@@ -13,7 +13,6 @@ const global = useGlobalStore();
 const router = useRouter();
 const route = useRoute();
 
-const searchInput = ref("");
 const coin = ref(-1);
 const fetchFlag = ref(false);
 const robotList = ref([] as any[]), baseModelList = ref([] as any[]);
@@ -498,7 +497,7 @@ async function fetchUserInfo() {
                 <router-link to="/user" class="mr-2">
                     <el-button :icon="User" circle/>
                 </router-link>
-                <router-link to="/settings">
+                <router-link to="/settings" v-if="global.username === 'admin'">
                     <el-button :icon="Setting" circle/>
                 </router-link>
             </div>
