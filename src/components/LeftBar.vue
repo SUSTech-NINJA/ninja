@@ -221,7 +221,9 @@ const cancelRecharge = () => {
 };
 const selectRechargeOption = (option: any) => {
     const newTokenAmount = coin.value + option.coins;
-    conn.post('/shop/buy_package', {result: newTokenAmount}, {
+    let formData = new FormData();
+    formData.append('result', newTokenAmount);
+    conn.post('/shop/buy_package', formData, {
         headers: {'Authorization': 'Bearer ' + global.token}
     })
         .then(_res => {
@@ -402,10 +404,6 @@ function getUserInfo(uuid: string) {
 
 function closeUserModal() {
     showUserModal.value = false;
-}
-
-function closeRobotModal() {
-    showRobotModal.value = false;
 }
 
 function rateRobot() {
