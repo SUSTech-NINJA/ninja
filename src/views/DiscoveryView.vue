@@ -7,7 +7,7 @@
             <div class="text-right">
                 <router-link to="/">
                     <el-icon>
-                        <Close />
+                        <Close/>
                     </el-icon>
                 </router-link>
             </div>
@@ -48,11 +48,11 @@
                 align="center"
                 :header-cell-style="headerCellStyle"
             >
-<!--                <el-table-column-->
-<!--                    prop="robotid"-->
-<!--                    label="Robot ID"-->
-<!--                    width="100"-->
-<!--                />-->
+                <!--                <el-table-column-->
+                <!--                    prop="robotid"-->
+                <!--                    label="Robot ID"-->
+                <!--                    width="100"-->
+                <!--                />-->
                 <el-table-column
                     prop="icon"
                     label="Icon"
@@ -78,11 +78,11 @@
                     label="Price"
                     width="100"
                 />
-<!--                <el-table-column-->
-<!--                    prop="quota"-->
-<!--                    label="Quota"-->
-<!--                    width="100"-->
-<!--                />-->
+                <!--                <el-table-column-->
+                <!--                    prop="quota"-->
+                <!--                    label="Quota"-->
+                <!--                    width="100"-->
+                <!--                />-->
                 <el-table-column
                     prop="rate"
                     label="Rate"
@@ -93,16 +93,16 @@
                     label="Popularity"
                     width="100"
                 />
-<!--                <el-table-column-->
-<!--                    prop="system_prompt"-->
-<!--                    label="System Prompt"-->
-<!--                    width="200"-->
-<!--                />-->
-<!--                <el-table-column-->
-<!--                    prop="knowledge_base"-->
-<!--                    label="Knowledge Base"-->
-<!--                    width="200"-->
-<!--                />-->
+                <!--                <el-table-column-->
+                <!--                    prop="system_prompt"-->
+                <!--                    label="System Prompt"-->
+                <!--                    width="200"-->
+                <!--                />-->
+                <!--                <el-table-column-->
+                <!--                    prop="knowledge_base"-->
+                <!--                    label="Knowledge Base"-->
+                <!--                    width="200"-->
+                <!--                />-->
                 <el-table-column
                     prop="creator"
                     label="Creator"
@@ -115,27 +115,26 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import { ElMessage } from 'element-plus';
-import { Close } from "@element-plus/icons-vue";
-import axios from 'axios';
-import { createConnection } from "../config";
-import { useGlobalStore } from "../stores/global";
+import {onMounted, ref} from 'vue';
+import {ElMessage} from 'element-plus';
+import {Close} from "@element-plus/icons-vue";
+import {createConnection} from "../config";
+import {useGlobalStore} from "../stores/global";
 
 const global = useGlobalStore();
 const conn = createConnection();
 
 
 const types = [
-    { label: 'Best Rated', value: 'best-rated' },
-    { label: 'Most Recent', value: 'most-recent' },
-    { label: 'Most Viewed', value: 'most-viewed' }
+    {label: 'Best Rated', value: 'best-rated'},
+    {label: 'Most Recent', value: 'most-recent'},
+    {label: 'Most Viewed', value: 'most-viewed'}
 ];
 
 const durations = [
-    { label: 'Recent', value: 'recent' },
-    { label: 'Month', value: 'month' },
-    { label: 'All Time', value: 'all' }
+    {label: 'Recent', value: 'recent'},
+    {label: 'Month', value: 'month'},
+    {label: 'All Time', value: 'all'}
 ];
 
 const selectedType = ref('best-rated');
@@ -151,20 +150,18 @@ const headerCellStyle = {
 };
 
 const fetchTrendingRobots = () => {
-    const formData = new FormData();
-    formData.append('type', selectedType.value);
-    formData.append('duration', selectedDuration.value);
+    let type = selectedType.value,
+        duration = selectedDuration.value;
 
-    conn.get('/robot/trendings', formData, {
+    conn.get(`/robot/trendings/${duration}/${type}`, {
         headers: {
-            'Authorization': 'Bearer ' + global.token,
-            'Content-Type': 'multipart/form-data'
+            'Authorization': 'Bearer ' + global.token
         }
     })
         .then(response => {
             robots.value = response.data;
         })
-        .catch(error => {
+        .catch(_error => {
             ElMessage({
                 type: 'error',
                 message: 'Failed to fetch Discovery data',

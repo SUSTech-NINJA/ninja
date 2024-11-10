@@ -125,6 +125,9 @@ const getMessagesList = () => {
 };
 
 const removeChat = (chatid: any) => {
+    if (chat.current === chatid) {
+        chat.current = '';
+    }
     conn.delete(`/chat/${chatid}`, {
         headers: {'Authorization': 'Bearer ' + global.token}
     })
@@ -324,17 +327,18 @@ function performSearch() {
         params = {
             type: searchBy.value === 'id' ? 1 : 2,
             string: searchQuery.value,
-            headers: {'Authorization': 'Bearer ' + global.token}
         };
     } else if (searchType.value === 'user') {
         url = '/user/search';
         params = {
             type: searchBy.value === 'uuid' ? 1 : 2,
             input: searchQuery.value,
-            headers: {'Authorization': 'Bearer ' + global.token}
         };
     }
-    conn.get(url, {params})
+    conn.get(url, {
+        params: params,
+        headers: {'Authorization': 'Bearer ' + global.token}
+    })
         .then(res => {
             let data: any = res.data;
             if (typeof data === 'string') {
