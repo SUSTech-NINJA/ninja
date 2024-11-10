@@ -23,6 +23,16 @@
                 :header-cell-style="headerCellStyle"
             >
                 <el-table-column
+                    prop="icon"
+                    label="Icon"
+                    width="100"
+                >
+                    <template #default="{ row }">
+                        <img :src="row.icon" alt="icon" class="robot-icon"/>
+                    </template>
+                </el-table-column>
+
+                <el-table-column
                     prop="name"
                     label="Model Name"
                     width="300"
@@ -206,6 +216,7 @@ const fetchModels = () => {
                 tokensPrice: item.price,
                 robotid: item.robotid,
                 id: item.id,
+                icon: item.icon,
             }));
         })
         .catch(_error => {
@@ -362,4 +373,10 @@ const exportUserInfo = () => {
 .left-icon-button {
     margin-right: auto;
 }
+.robot-icon {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+}
+
 </style>
