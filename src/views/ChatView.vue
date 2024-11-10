@@ -23,6 +23,7 @@ const fetchFlag = ref(false), messages = ref([] as any[]), chatInput = ref(''),
 
 onMounted(() => {
     if (!global.token) return;
+    chat.current = '';
     fetcher();
 });
 let lastFetchFlag = false;
@@ -41,6 +42,7 @@ const fetcher = () => {
 };
 
 const getMessages = () => {
+    if (chat.current === '') return;
     conn.get('/chat/' + chat.current, {
         headers: {'Authorization': 'Bearer ' + global.token}
     })
@@ -70,7 +72,7 @@ const getMessages = () => {
         })
         .catch(err => {
             console.log(err);
-            toaster.show('Query chat list failed', {type: 'error'});
+            toaster.show('Query chat info failed', {type: 'error'});
             messages.value = [];
         });
 };
@@ -198,6 +200,8 @@ function clearContext() {
 }
 
 function getSuggestions() {
+    if (chat.current === '') return;
+    console.log("CUR", chat.current)
     conn.get('/chat/suggestions/' + chat.current, {
         headers: {'Authorization': 'Bearer ' + global.token}
     })

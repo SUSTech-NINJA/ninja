@@ -244,6 +244,7 @@ function startChatWithRobot(item: any) {
     conn.post('/chat/new', {
         model: item.base_model,
         prompts: item.system_prompt,
+        robotid: item.robotid
     }, {
         headers: {'Authorization': 'Bearer ' + global.token}
     })
@@ -553,9 +554,6 @@ async function fetchUserInfo() {
                 </router-link>
             </div>
         </div>
-        <el-button @click="startChatWithRobot({system_prompt:'I am GPT', base_model:'gpt-4o'})">
-            Create New Chat
-        </el-button>
         <hr class="mt-3 mb-3 col-span-2"/>
     </div>
     <div class="grow mt-1 mb-4 overflow-scroll">
