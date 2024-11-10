@@ -556,7 +556,7 @@ async function fetchUserInfo() {
                 </router-link>
             </div>
         </div>
-        <el-button @click="startChatWithRobot({system_prompt:'I am GPT', base_model:'gpt-3.5-turbo'})">
+        <el-button @click="startChatWithRobot({system_prompt:'I am GPT', base_model:'gpt-4o'})">
             Create New Chat
         </el-button>
         <hr class="mt-3 mb-3 col-span-2"/>
