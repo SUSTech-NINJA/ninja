@@ -109,7 +109,7 @@ const controller = ref(new AbortController());
 const isStopped = ref(false);
 
 async function sendChat() {
-    if (chatInput.value === '') {
+    if (chatInput.value === '' && files.value.length === 0) {
         toaster.show('Message cannot be empty', {type: 'warning'});
         return;
     }
@@ -162,6 +162,7 @@ async function sendChat() {
             messages.value[last].content = JSON.parse(messages.value[last].content);
         } catch (_e) {
         }
+        console.log(messages.value);
         conn.get('/title/' + chat.current, {
             headers: {'Authorization': 'Bearer ' + global.token}
         })
@@ -247,18 +248,13 @@ function openMultimodalDialog(type: string) {
 
 function inputFile(event: any) {
     newFileName.value = event.target.files[0].name;
+    console.log(event.target.files[0]);
     let fileReader = new FileReader();
     fileReader.readAsDataURL(event.target.files[0]);
-    if (event.target.files[0].type !== '')
-        fileReader.onload = function (e) {
-            newFile.value = e.target?.result as any;
-            newFileMime.value = event.target.files[0].type;
-        };
-    else {
-        newFile.value = null;
-        newFileName.value = '';
-        toaster.show('Invalid file type', {type: 'error'});
-    }
+    fileReader.onload = function (e) {
+        newFile.value = e.target?.result as any;
+        newFileMime.value = event.target.files[0].type;
+    };
 }
 
 function removeFile(name: string) {
@@ -266,69 +262,9 @@ function removeFile(name: string) {
     toaster.show('File removed');
 }
 
-let mediaRecorder: any = null, timingTimeout: any = null,
-    startTime = ref(), curTime = ref();
-
-function startRecord() {
-    navigator.mediaDevices.getUserMedia({audio: true})
-        .then(stream => {
-            mediaRecorder = new MediaRecorder(stream);
-            let chunks = [] as any[];
-            mediaRecorder.ondataavailable = (e: any) => {
-                chunks.push(e.data);
-            };
-            mediaRecorder.onstop = (_e: any) => {
-                if (curTime.value - startTime.value < 1000) {
-                    toaster.show('Voice recording too short', {type: 'warning'});
-                    return;
-                }
-                let blob = new Blob(chunks, {type: 'audio/ogg; codecs=opus'});
-                toaster.success('Voice recorded');
-                newFile.value = URL.createObjectURL(blob) as any;
-                newFileName.value = 'voice' + startTime.value + '.ogg';
-                newFileMime.value = 'audio/ogg';
-                if (timingTimeout !== null) {
-                    clearInterval(timingTimeout);
-                    startTime.value = null;
-                    curTime.value = null;
-                }
-            };
-            mediaRecorder.start();
-            startTime.value = new Date();
-            curTime.value = new Date();
-            timingTimeout = setInterval(() => {
-                curTime.value = new Date();
-            }, 1000);
-            toaster.show('Recording started');
-        })
-        .catch(_err => {
-            toaster.show('Failed to record voice', {type: 'error'});
-        });
-}
-
-const getParsedDuration = computed(() => {
-    if (startTime.value === null || curTime.value === null
-        || typeof startTime.value === 'undefined' || typeof curTime.value === 'undefined') {
-        return '0:00';
-    }
-    let diff = curTime.value - startTime.value;
-    let minutes = Math.floor(diff / 60000);
-    let seconds = Math.floor((diff % 60000) / 1000);
-    return minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
-});
-
-function stopRecord() {
-    try {
-        mediaRecorder.stop();
-        toaster.show('Recording stopped', {type: 'info'});
-    } catch (e) {
-        toaster.show('Failed to stop recording', {type: 'error'});
-    }
-}
-
 function submitFile() {
     if (newFile.value === null) {
-        toaster.show('No file updated or recorded', {type: 'warning'});
+        toaster.show('No file updated', {type: 'warning'});
         return;
     }
     if ((newFile.value as any).length > 1024 * 1024 * 100) {
@@ -341,6 +277,7 @@ function submitFile() {
         'name': newFileName.value
     } as FileInfo);
     fileMimes.value.push(newFileMime.value);
+    console.log(files.value);
     global.dialogs.multimodal = false;
 }
 
@@ -409,7 +346,8 @@ function toggleInput(input: string) {
                         </el-icon>
                     </div>
                     <div>
-                        <el-card shadow="never" class="ml-3 mr-3 text-sm w-fit"
+                        <el-card shadow="never"
+                                 class="ml-3 mr-3 text-sm w-fit max-w-[500px] lg:max-w-[600px] xl:max-w-[700px]"
                                  :class="item.role === 'user' ? 'bg-blue-50 text-right' : 'bg-neutral-50 text-left'">
                             <span v-if="typeof item.content == 'string'">{{ item.content }}</span>
                             <span v-else>
@@ -465,10 +403,9 @@ function toggleInput(input: string) {
                                 </el-dropdown-item>
                                 <el-dropdown-item :divided="files.length > 0"
                                                   @click="openMultimodalDialog('file')">Add
-                                    a file
+                                    a text file
                                 </el-dropdown-item>
                                 <el-dropdown-item @click="openMultimodalDialog('image')">Add an image</el-dropdown-item>
-                                <el-dropdown-item @click="openMultimodalDialog('voice')">Record voice</el-dropdown-item>
                             </el-dropdown-menu>
                         </template>
                     </el-dropdown>
@@ -484,24 +421,17 @@ function toggleInput(input: string) {
     <el-dialog v-model="global.dialogs.multimodal"
                :title="'Multimodal: ' + firstUpperCase(multimodalType)" width="50%">
         <el-form label-width="auto">
-            <el-form-item label="File" v-if="multimodalType !== 'voice'">
+            <el-form-item label="File">
                 <el-button>
                     Select a file
-                    <input type="file" v-on:change="inputFile" :accept="multimodalType === 'image' ? 'image/*' : '*/*'"
+                    <input type="file" v-on:change="inputFile"
+                           :accept="multimodalType === 'image' ? 'image/*' : 'text/*'"
                            class="opacity-0 absolute top-0 right-0 left-0 bottom-0 !cursor-pointer"/>
                 </el-button>
                 <span class="ml-2.5 text-gray-500">{{ newFileName }}</span>
             </el-form-item>
             <el-form-item label="Preview" v-if="multimodalType === 'image' && newFile != null">
                 <el-image :src="newFile"/>
-            </el-form-item>
-            <el-form-item label="Record Now" v-if="multimodalType === 'voice'">
-                <el-button @click="startRecord">Start</el-button>
-                <el-button @click="stopRecord">Stop</el-button>
-                <span class="ml-2.5 text-gray-500">{{ getParsedDuration }}</span>
-            </el-form-item>
-            <el-form-item label="Recorded Voice" v-if="multimodalType === 'voice' && newFile != null">
-                <audio :src="newFile" controls/>
             </el-form-item>
         </el-form>
         <p class="text-sm text-gray-500">To save tokens, only files <100kb are allowed. </p>
