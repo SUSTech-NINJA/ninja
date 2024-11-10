@@ -170,7 +170,7 @@ async function updateUserInfo() {
 // Open messages
 async function fetchMessages() {
     try {
-        const response = await api.get(`/conversation/${global.uuid}`, {
+        const response = await api.get(`/conversation`, {
             headers: {'Authorization': 'Bearer ' + global.token}
         });
         if (response.status === 200) {
