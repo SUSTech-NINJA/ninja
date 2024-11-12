@@ -13,7 +13,7 @@ import {
     ElRate,
     ElScrollbar,
 } from 'element-plus';
-import {ChatDotRound, Close} from '@element-plus/icons-vue';
+import {ChatDotRound, Close, Delete, Edit, View} from '@element-plus/icons-vue';
 import {useGlobalStore} from '../stores/global';
 import {RouterLink, useRoute, useRouter} from 'vue-router';
 import dayjs from 'dayjs';
@@ -78,8 +78,9 @@ const showRobotRateModal = ref(false);
 const showPostDialog = ref(false);
 const showMessageDialog = ref(false);
 const showRateDialog = ref(false); // Added for user rating dialog
-
+const showIsDeletedDialog = ref(false); // Added for delete dialog
 // Axios instance with base config and request interceptor
+const showEditDialog = ref(false);
 const api = createConnection();
 
 // Fetch user info, posts, and robot list
@@ -97,7 +98,7 @@ async function fetchUserInfo() {
             userInfo.value.intro = data.UserInfo.intro;
             userInfo.value.uuid = data.UserInfo.uuid;
             userInfo.value.rate = data.UserInfo.rate;
-            robots.value = data.robot ? data.robot.slice(0, 3) : []; // Only show 3 robots
+            robots.value = data.robot;
             console.log(data.post)
             posts.value = data.post || [];
             selectedPost.value = posts.value[selectedPostId.value as any];
@@ -149,7 +150,7 @@ async function updateUserInfo() {
         formData.append('email', userInfo.value.email);
         formData.append('icon', userInfo.value.avatar); // Using base64 data
 
-        const response = await api.post('/update/'+global.uuid, formData, {
+        const response = await api.post('/update/' + global.uuid, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
                 'Authorization': 'Bearer ' + global.token
@@ -242,7 +243,7 @@ async function publishPost() {
         formData.append('content', newPostContent.value);
         formData.append('icon', currentUserInfo.value.avatar);
         formData.append('uuid', global.uuid);
-        formData.append('name',currentUserInfo.value.username);
+        formData.append('name', currentUserInfo.value.username);
         const response = await api.post('/post', formData, {
             headers: {'Authorization': 'Bearer ' + global.token}
         });
@@ -270,11 +271,11 @@ async function sendPrivateMessage(mode: string) {
         formData.append('content', newComment.value);
         formData.append('icon', currentUserInfo.value.avatar);
         formData.append('uuid', global.uuid);
-        formData.append('username',currentUserInfo.value.username);
+        formData.append('username', currentUserInfo.value.username);
         formData.append('postid', selectedPostId.value);
-        api.post('/response',{
-            data : formData,
-        },{
+        api.post('/response', {
+            data: formData,
+        }, {
             headers: {'Authorization': 'Bearer ' + global.token}
         })
             .then(res => {
@@ -285,7 +286,7 @@ async function sendPrivateMessage(mode: string) {
             })
             .catch(err => {
                 ElMessage.error('Failed to send message');
-        })
+            })
 
     } catch (error) {
         ElMessage.error('Failed to send message');
@@ -369,6 +370,13 @@ function openRobotModal(robotId: any) {
     robotRating.value = 0;
 }
 
+function getSelectedRobot(robotId: any) {
+    selectedRobot.value = robots.value[robotId];
+    selectedRobotId.value = robotId;
+    robotComment.value = '';
+    robotRating.value = 0;
+}
+
 // Show posts detail modal
 function openPostModal(postId: any) {
     selectedPost.value = posts.value[postId];
@@ -393,6 +401,51 @@ function inputFile(event: any) {
     };
 }
 
+function deleteRobot(robotId: any) {
+    try {
+        api.delete(`/robot/${robots.value[robotId].robotid}`, {
+            headers: {'Authorization': 'Bearer ' + global.token}
+        })
+            .then(res => {
+                ElMessage.success('Robot deleted successfully');
+                fetchUserInfo();
+                showIsDeletedDialog.value = false;
+            })
+            .catch(err => {
+                ElMessage.error('Failed to delete robot');
+            })
+    } catch (error) {
+        ElMessage.error('Failed to delete robot');
+    }
+}
+
+function editRobot(robotId: any) {
+    try {
+        let formData = new FormData();
+        formData.append('icon', selectedRobot.value.icon);
+        formData.append('robot_name', selectedRobot.value.robot_name);
+        formData.append('base_model', selectedRobot.value.base_model);
+        formData.append('system_prompt', selectedRobot.value.system_prompt);
+        formData.append('creator', selectedRobot.value.creator);
+        formData.append('price', selectedRobot.value.price);
+        formData.append('quota', selectedRobot.value.quota);
+        formData.append('time', selectedRobot.value.time);
+        formData.append('popularity', selectedRobot.value.popularity);
+        api.post(`/robot/${robots.value[robotId].robotid}`, formData, {
+            headers: {'Authorization': 'Bearer ' + global.token}
+        }).then(res => {
+            ElMessage.success('Robot edited successfully');
+            fetchUserInfo();
+            showEditDialog.value = false;
+        }).catch(err => {
+            ElMessage.error('Failed to edit robot');
+        })
+
+    } catch (error) {
+        ElMessage.error('Failed to edit robot');
+    }
+}
+
 // Page initialization
 onMounted(() => {
     if (!global.token) {
@@ -401,6 +454,7 @@ onMounted(() => {
     fetchUserInfo();
     fetchCurrentUserInfo();
 });
+
 </script>
 
 <template>
@@ -421,7 +475,7 @@ onMounted(() => {
                     class="mr-2.5 mb-1.5 mt-1" link
                 >
                     <ElIcon>
-                        <ChatDotRound />
+                        <ChatDotRound/>
                     </ElIcon>
                 </el-button>
                 <RouterLink to="/" class="mt-1">
@@ -582,11 +636,11 @@ onMounted(() => {
         <div class="mt-8">
             <h3 class="text-lg font-semibold">Robots</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+
                 <ElCard
                     v-for="(robot, index) in robots"
                     :key="index"
                     shadow="hover"
-                    @click="openRobotModal(index)"
                     class="text-left"
                 >
                     <div class="flex items-center mb-4">
@@ -600,7 +654,99 @@ onMounted(() => {
                         <b>Rating:</b>
                         <ElRate :model-value="robot.rate" disabled allow-half class="ml-1"/>
                     </div>
+
+                    <el-button class=" mt-2" @click="openRobotModal(index)">
+                        <el-icon>
+                            <View/>
+                        </el-icon>
+                        <span class="ml-2">View bot</span>
+                    </el-button>
+
+                    <el-button class=" mt-2" @click.stop="showIsDeletedDialog=true;getSelectedRobot(index)">
+                        <el-icon>
+                            <Delete/>
+                        </el-icon>
+                        <span class="ml-2">Delete bot</span>
+                    </el-button>
+
+                    <el-button class=" mt-2" @click.stop="showEditDialog=true;getSelectedRobot(index)">
+                        <el-icon>
+                            <Edit/>
+                        </el-icon>
+                        <span class="ml-2">Edit bot</span>
+                    </el-button>
+
+                    <ElDialog
+                        v-model="showIsDeletedDialog"
+                        title="Delete Bot"
+                        :title="selectedRobot && selectedRobot.robot_name"
+                        width="30%"
+                        @click.stop
+                        :show-close="false"
+
+                    >
+                        <div class="text-center">
+                            <p>Are you sure you want to delete this bot?</p>
+                            <el-button @click="showIsDeletedDialog=false" type="primary">Cancel</el-button>
+                            <el-button @click="deleteRobot(index)" type="danger">Delete</el-button>
+                        </div>
+                    </ElDialog>
+
+                    <!-- Edit dialog -->
+                    <el-dialog
+                        title="Robot Edit"
+                        v-model="showEditDialog"
+                        :title="selectedRobot && selectedRobot.robot_name"
+                        @click.stop
+                        :show-close="false"
+                    >
+                        <el-form>
+                            <el-form-item label="Icon">
+                                <ElAvatar :src="selectedRobot.icon"/>
+                                <ElButton class="ml-2">
+                                    Select File
+                                    <input type="file" @change="inputFile"
+                                           class="opacity-0 absolute top-0 right-0 left-0 bottom-0 cursor-pointer"
+                                    />
+                                </ElButton>
+                                <span class="ml-2.5 text-gray-500">{{ userInfo.filename }}</span>
+
+                            </el-form-item>
+                            <el-form-item label="Name">
+                                <el-input v-model="selectedRobot.robot_name"/>
+                            </el-form-item>
+                            <el-form-item label="Base Model">
+                                <el-input v-model="selectedRobot.base_model"/>
+                            </el-form-item>
+                            <el-form-item label="System Prompt">
+                                <el-input v-model="selectedRobot.system_prompt"/>
+                            </el-form-item>
+                            <el-form-item label="Creator">
+                                <el-input v-model="selectedRobot.creator" :disabled="true"/>
+                            </el-form-item>
+                            <el-form-item label="Price">
+                                <el-input v-model="selectedRobot.price"/>
+                            </el-form-item>
+                            <el-form-item label="Quota">
+                                <el-input v-model="selectedRobot.quota"/>
+                            </el-form-item>
+                            <el-form-item label="Public Time">
+                                <el-input v-model="selectedRobot.time" :disabled="true"/>
+                            </el-form-item>
+                            <el-form-item label="Popularity">
+                                <el-input v-model="selectedRobot.popularity" :disabled="true"/>
+                            </el-form-item>
+                        </el-form>
+
+                        <span slot="footer" class="dialog-footer">
+                            <el-button type="primary" @click="editRobot(index)">Confirm</el-button>
+                            <el-button
+                                @click="showEditDialog = false">Cancel</el-button>
+                        </span>
+                    </el-dialog>
+
                 </ElCard>
+
             </div>
         </div>
 
@@ -616,13 +762,12 @@ onMounted(() => {
                         <span class="ml-auto text-gray-500">{{ getTimeString(post.time) }}</span>
                     </div>
                     <p class="text-left text-gray-700">{{ post.content }}</p>
-<!--                    <div v-if="post.type === 'rate'" class="mt-1">-->
-<!--                        <ElRate :model-value="post.rate" disabled allow-half class="ml-1"/>-->
-<!--                    </div>-->
+                    <!--                    <div v-if="post.type === 'rate'" class="mt-1">-->
+                    <!--                        <ElRate :model-value="post.rate" disabled allow-half class="ml-1"/>-->
+                    <!--                    </div>-->
                 </ElCard>
             </div>
         </div>
-
 
 
         <!-- Post Details Modal -->
@@ -782,7 +927,7 @@ onMounted(() => {
                                     <ElAvatar :src="chat.icon" size="small"/>
                                     <span class="ml-2">{{ chat.sender }}</span>
                                     <span class="ml-auto text-gray-500">
-                                        {{chat.timestamp}}
+                                        {{ chat.timestamp }}
                                 </span>
                                 </div>
                                 <el-card shadow="never" class="ml-3 mr-3 text-sm w-fit user-dialog-chat"
@@ -834,6 +979,7 @@ onMounted(() => {
 .cursor-not-allowed {
     cursor: not-allowed;
 }
+
 .opacity-50 {
     opacity: 0.5;
 }
