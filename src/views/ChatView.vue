@@ -108,7 +108,7 @@ function editCur() {
 }
 
 const controller = ref(new AbortController());
-const isStopped = ref(false);
+const isStopped = ref(false), deltaSum = ref(0);
 
 async function sendChat() {
     if (chatInput.value === '' && files.value.length === 0) {
@@ -121,6 +121,17 @@ async function sendChat() {
             role: 'user',
             content: chatInput.value
         });
+        let delta = chatInput.value.length * Number(robotInfo.value?.info?.price);
+        if (delta > Number(global.coin) && baseModel.value !== 'gpt-3.5-turbo') {
+            toaster.show('Insufficient balance, can only use GPT-3.5', {type: 'warning'});
+            messages.value.pop();
+            return;
+        }
+        if (deltaSum.value + delta > Number(robotInfo.value?.info?.quota)) {
+            toaster.show('Exceeded quota, abort', {type: 'warning'});
+            messages.value.pop();
+            return;
+        }
         isStopped.value = false;
         messages.value.push({
             role: 'assistant',
@@ -164,6 +175,30 @@ async function sendChat() {
             messages.value[last].content = JSON.parse(messages.value[last].content);
         } catch (_e) {
         }
+        deltaSum.value += delta;
+        console.log(global.coin, delta, deltaSum.value)
+        global.coin -= delta;
+        let coinFormData = new FormData();
+        coinFormData.append('result', global.coin.toString());
+        conn.post('/shop/buy_package', coinFormData, {
+            headers: {'Authorization': 'Bearer ' + global.token}
+        })
+            .then(_res => {
+            })
+            .catch(_err => {
+                toaster.show('Failed to deduct money', {type: 'error'});
+            });
+        coinFormData = new FormData();
+        coinFormData.append('current', (delta / 50).toFixed(0));
+        conn.post('/reward/' + robotInfo.value.info.creator, coinFormData, {
+            headers: {'Authorization': 'Bearer ' + global.token}
+        })
+            .then(_res => {
+            })
+            .catch(_err => {
+                toaster.show('Failed to give reward to creator', {type: 'error'});
+            });
+
         console.log(messages.value);
         conn.get('/title/' + chat.current, {
             headers: {'Authorization': 'Bearer ' + global.token}
@@ -312,8 +347,10 @@ function toggleInput(input: string) {
     <div v-else class="p-6 w-full h-full flex flex-col">
         <div class="grid grid-cols-3 w-full mb-4 flex-none top-bar">
             <div class="col-span-2 text-left block">
-                <h1 class="text-xl font-bold inline-block" v-if="!editingCur">
-                    {{ (curChat as any)?.title }}
+                <h1 class="text-xl font-bold inline-block" v-if="!editingCur" :title="(curChat as any)?.title">
+                    {{
+                        (curChat as any)?.title.length > 35 ? (curChat as any)?.title.substring(0, 35) + '...' : (curChat as any)?.title
+                    }}
                 </h1>
                 <el-input v-model="titleEditing" v-else class="w-1/2"/>
                 <p class="text-sm text-gray-500 inline-block ml-1.5">

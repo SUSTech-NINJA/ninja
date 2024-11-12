@@ -13,7 +13,6 @@ const global = useGlobalStore();
 const router = useRouter();
 const route = useRoute();
 
-const coin = ref(-1);
 const fetchFlag = ref(false);
 const robotList = ref([] as any[]), baseModelList = ref([] as any[]);
 const conn = createConnection();
@@ -70,10 +69,6 @@ const userInfo = ref({
 });
 const robots = ref<any[]>([]);
 const posts = ref<any[]>([]);
-const isOwnProfile = computed(() => {
-    const userId = route.params.userId as string;
-    return !userId || userId === global.uuid;
-});
 
 // 监听路由变化，获取用户信息
 watch(() => route.params.userId, () => {
@@ -204,7 +199,7 @@ const getToken = () => {
             if (typeof data === 'string') {
                 data = JSON.parse(data);
             }
-            coin.value = data.current;
+            global.coin = data.current;
         })
         .catch(err => {
             if (err.response.status === 401) {
@@ -213,7 +208,7 @@ const getToken = () => {
                 router.push('/');
             }
             toaster.show('Failed to query coin quantity', {type: 'error'});
-            coin.value = -1;
+            global.coin = -1;
         });
 };
 const addToken = () => {
@@ -223,14 +218,14 @@ const cancelRecharge = () => {
     showRechargeDialog.value = false;
 };
 const selectRechargeOption = (option: any) => {
-    const newTokenAmount = coin.value + option.coins;
+    const newTokenAmount = global.coin + option.coins;
     let formData = new FormData();
     formData.append('result', newTokenAmount);
     conn.post('/shop/buy_package', formData, {
         headers: {'Authorization': 'Bearer ' + global.token}
     })
         .then(_res => {
-            coin.value = newTokenAmount;
+            global.coin = newTokenAmount;
             showRechargeDialog.value = false;
             toaster.show('Payment success', {type: 'success'});
         })
@@ -586,7 +581,7 @@ async function fetchUserInfo() {
 
     <div class="flex-none w-full grid grid-cols-2 items-center">
         <div class="text-left text-sm fit-content">
-            Current coins: {{ coin }}
+            Current coins: {{ global.coin?.toFixed(0) }}
         </div>
         <div class="text-right">
             <el-button @click="addToken">Buy More</el-button>
@@ -831,7 +826,7 @@ async function fetchUserInfo() {
     >
         <!-- remain coins -->
         <div class="text-center mb-4">
-            <p class="text-lg font-bold">Current Coins: {{ coin }}</p>
+            <p class="text-lg font-bold">Current Coins: {{ global.coin?.toFixed(0) }}</p>
         </div>
 
         <div class="grid grid-cols-2 gap-4"> <!-- charge options -->

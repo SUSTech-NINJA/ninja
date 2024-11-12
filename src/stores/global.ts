@@ -11,6 +11,7 @@ export const useGlobalStore = defineStore('global', {
             rate: false,
             multimodal: false,
         },
+        coin: 0,
     }),
     actions: {},
     persist: {debug: true}
