@@ -14,12 +14,12 @@ const curChat = computed(() => chat.chatList.find((item: any) => item.chatid ===
 const conn = createConnection();
 const toaster = createToaster(toasterOptions);
 const fetchFlag = ref(false), messages = ref([] as any[]), chatInput = ref(''),
-    robotid = ref(''), baseModel = ref(''), robotInfo = ref({} as any),
+    robotid = ref(''), baseModel = ref(''), robotInfo = ref({} as any), atModel = ref(''), atBaseModel = ref(''),
     editingCur = ref(false), titleEditing = ref(""), isSingleRound = ref(false),
     isOptimizingPrompt = ref(false), multimodalType = ref(''),
     files = ref([] as any[]), fileMimes = ref([] as any[]),
     newFile = ref(null), newFileName = ref(''), newFileMime = ref(''),
-    suggestion = ref("");
+    suggestion = ref(""), robotList = ref<any[]>([]);
 
 onMounted(() => {
     if (!global.token) return;
@@ -37,8 +37,28 @@ chat.$subscribe(() => {
 const fetcher = () => {
     getMessages();
     getSuggestions();
+    getRobots();
     files.value = [];
     fileMimes.value = [];
+    atModel.value = "";
+    atBaseModel.value = "";
+};
+
+const getRobots = () => {
+    conn.get('/robot', {
+        headers: {'Authorization': 'Bearer ' + global.token}
+    })
+        .then(res => {
+            let data = res.data;
+            if (typeof data === 'string') {
+                data = JSON.parse(data);
+            }
+            robotList.value = data;
+        })
+        .catch(_err => {
+            toaster.show('Failed to query robot list', {type: 'error'});
+            robotList.value = [];
+        });
 };
 
 const getMessages = () => {
@@ -152,15 +172,28 @@ async function sendChat() {
         fileMimes.value = [];
         chatInput.value = '';
         suggestion.value = '';
-        const res = await fetch(host + '/chat/' + chat.current, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + global.token
-            },
-            body: JSON.stringify(json),
-            signal: controller.value.signal
-        });
+        let res = null;
+        if (atModel.value !== '') {
+            res = await fetch(host + '/chat/' + chat.current + '/use/' + atBaseModel.value, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + global.token
+                },
+                body: JSON.stringify(json),
+                signal: controller.value.signal
+            })
+        } else {
+            res = await fetch(host + '/chat/' + chat.current, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + global.token
+                },
+                body: JSON.stringify(json),
+                signal: controller.value.signal
+            })
+        }
         toaster.show('Message sent', {type: 'success'});
         const reader = res.body?.getReader();
         if (typeof reader != 'undefined') {
@@ -335,6 +368,10 @@ function isLastAssistantMsg(role: string, index: number) {
 function toggleInput(input: string) {
     chatInput.value = input;
 }
+
+const getRobotsSlicer = computed(() => {
+    return robotList.value.slice(0, 10);
+});
 </script>
 
 <template>
@@ -345,8 +382,8 @@ function toggleInput(input: string) {
         </div>
     </div>
     <div v-else class="p-6 w-full h-full flex flex-col">
-        <div class="grid grid-cols-3 w-full mb-4 flex-none top-bar">
-            <div class="col-span-2 text-left block">
+        <div class="grid grid-cols-2 w-full mb-4 flex-none top-bar">
+            <div class="text-left block">
                 <h1 class="text-xl font-bold inline-block" v-if="!editingCur" :title="(curChat as any)?.title">
                     {{
                         (curChat as any)?.title.length > 35 ? (curChat as any)?.title.substring(0, 35) + '...' : (curChat as any)?.title
@@ -358,6 +395,26 @@ function toggleInput(input: string) {
                 </p>
             </div>
             <div class="text-right">
+                <el-dropdown class="pr-3">
+                    <el-button>
+                        @Model{{
+                            atModel !== '' ? ': ' + atModel : ''
+                        }}
+                    </el-button>
+                    <template #dropdown>
+                        <el-dropdown-menu>
+                            <div v-for="item in getRobotsSlicer">
+                                <el-dropdown-item :disabled="item?.robotid === robotid"
+                                                  @click="atModel = item?.robot_name; atBaseModel = item?.base_model">
+                                    <span>{{ item?.robot_name }}</span>
+                                </el-dropdown-item>
+                            </div>
+                            <el-dropdown-item divided @click="atModel = ''; atBaseModel = ''">
+                                <span>None</span>
+                            </el-dropdown-item>
+                        </el-dropdown-menu>
+                    </template>
+                </el-dropdown>
                 <el-button :icon="editingCur ? Check : EditPen" @click="editCur" circle class="mr-3"
                            title="Edit Conversation"/>
                 <el-button :icon="Delete" @click="clearContext" circle class="mr-3" title="Clear Context"/>
