@@ -273,7 +273,7 @@ async function sendPrivateMessage(mode: string) {
         formData.append('uuid', userInfo.value.uuid);
         formData.append('name', userInfo.value.username);
         if (typeof selectedPostId.value != 'undefined' && mode === 'post')
-            formData.append('postid', selectedPostId.value.toString());
+            formData.append('postid', selectedPost.value.postid);
         if (mode === 'post')
             api.post('/response', formData, {
                 headers: {'Authorization': 'Bearer ' + global.token}
