@@ -39,6 +39,8 @@ const userInfo = ref({
     filename: '',
 });
 const selectedRobotIcon = ref('');
+const currentChat = ref('');
+
 const isOwnProfile = computed(() => {
     const userId = route.params.userId as string;
     return !userId || userId === global.uuid;
@@ -181,8 +183,7 @@ async function fetchMessages() {
             headers: {'Authorization': 'Bearer ' + global.token}
         });
         if (response.status === 200) {
-            const data = response.data;
-            messages.value = data.conversation_list || [];
+            messages.value = response.data || [];
         }
     } catch (error) {
         ElMessage.error('Failed to fetch messages list');
@@ -197,14 +198,15 @@ async function openMessages() {
 // View chat history
 async function viewChatHistory(message: any) {
     try {
-        const response = await api.get(`/get_history/${message.userid}`, {
+        const response = await api.get(`/get_history/${message.uuid}`, {
             headers: {'Authorization': 'Bearer ' + global.token}
         });
         if (response.status === 200) {
             const data = response.data;
-            chatHistory.value = data.history || [];
+            chatHistory.value = response.data || [];
             showChatHistoryModal.value = true;
-            chatWithUser.value = message.userid;
+            chatWithUser.value = message.uuid;
+            currentChat.value = message.uuid;
         }
     } catch (error) {
         ElMessage.error('Failed to fetch chat history');
@@ -220,7 +222,7 @@ async function sendChatReply() {
     try {
         let formData = new FormData();
         formData.append('content', chatReplyContent.value);
-        formData.append('uuid', global.uuid);
+        formData.append('uuid', currentChat.value);
         const response = await api.post('/send_message', formData, {
             headers: {'Authorization': 'Bearer ' + global.token}
         });
@@ -228,7 +230,7 @@ async function sendChatReply() {
             ElMessage.success('Message sent successfully');
             chatReplyContent.value = '';
             // Refresh chat history
-            await viewChatHistory({userid: chatWithUser.value});
+            await viewChatHistory({uuid: currentChat.value});
         } else {
             ElMessage.error('Failed to send message');
         }
@@ -966,7 +968,7 @@ function inputKnowledgeFile(event: any) {
                             >
                                 <div class="flex items-center">
                                     <ElAvatar :src="wrapIcon(message.icon, 'default_avatar.png')" size="small"/>
-                                    <span class="ml-2">{{ message.userid }}</span>
+                                    <span class="ml-2">{{ message.username }}</span>
                                 </div>
                             </div>
                         </ElScrollbar>

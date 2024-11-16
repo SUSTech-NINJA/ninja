@@ -2,7 +2,7 @@
 import {useChatStore} from "../stores/chat";
 import {computed, onMounted, ref, watch} from "vue";
 import {ArrowDown, Close, MagicStick, Plus, Search, Setting, User} from "@element-plus/icons-vue";
-import {addActiveClass, addHoverClass, removeActiveClass, removeHoverClass} from "../util";
+import {addActiveClass, addHoverClass, removeActiveClass, removeHoverClass, wrapIcon} from "../util";
 import {createConnection, toasterOptions} from "../config";
 import {createToaster} from "@meforma/vue-toaster";
 import {useRoute, useRouter} from "vue-router";
@@ -604,7 +604,7 @@ async function fetchUserInfo() {
                 No chat available.
             </div>
         </div>
-        <el-card v-for="item in chat.chatList" shadow="hover" class="mb-3 relative"
+        <el-card v-for="item in chat.chatList" shadow="hover" class="mb-3 relative mr-[5px]"
                  :class="{'!border-[1px] !border-blue-500': chat.current === item.chatid}"
                  @click="chat.current = item.chatid; fetchFlag = !fetchFlag; gotoChat()">
             <div class="flex-none w-full text-left">
@@ -682,7 +682,9 @@ async function fetchUserInfo() {
                      @click="handleResultClick(item)">
                     <el-card shadow="hover">
                         <div class="text-center">
-                            <el-avatar :src="item.icon" size="large"/>
+                            <el-avatar
+                                :src="wrapIcon(item.icon, item.username ? 'default_avatar.png' : 'bot_avatar.png')"
+                                size="large"/>
                             <p>Name: {{ item.username || item.robot_name }}</p>
                             <p>ID: {{ item.uuid || item.robotid }}</p>
                             <el-rate :model-value="item.rate" disabled></el-rate>
