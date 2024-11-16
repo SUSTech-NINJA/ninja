@@ -147,7 +147,7 @@ async function sendChat() {
             messages.value.pop();
             return;
         }
-        if (deltaSum.value + delta > Number(robotInfo.value?.info?.quota)) {
+        if (deltaSum.value + delta > Number(robotInfo.value?.info?.quota) && Number(robotInfo.value?.info?.quota) !== 0) {
             toaster.show('Exceeded quota, abort', {type: 'warning'});
             messages.value.pop();
             return;

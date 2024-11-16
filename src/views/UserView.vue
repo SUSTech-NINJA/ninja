@@ -98,7 +98,7 @@ async function fetchUserInfo() {
             userInfo.value.uuid = data.UserInfo.uuid;
             userInfo.value.rate = data.UserInfo.rate;
             robots.value = data.robot;
-            console.log(data.post)
+            console.log(data.robot)
             posts.value = data.post || [];
             selectedPost.value = posts.value[selectedPostId.value as any];
 
@@ -426,6 +426,7 @@ function editRobot(robotId: any) {
         formData.append('robot_name', selectedRobot.value.robot_name);
         formData.append('base_model', selectedRobot.value.base_model);
         formData.append('system_prompt', selectedRobot.value.system_prompt);
+        formData.append('knowledge_base', selectedRobot.value.knowledge_base);
         formData.append('creator', selectedRobot.value.creator);
         formData.append('price', selectedRobot.value.price);
         formData.append('quota', selectedRobot.value.quota);
@@ -455,6 +456,16 @@ onMounted(() => {
     fetchCurrentUserInfo();
 });
 
+const knowledgeBaseName = ref('');
+
+function inputKnowledgeFile(event: any) {
+    knowledgeBaseName.value = event.target.files[0].name;
+    let fileReader = new FileReader();
+    fileReader.readAsText(event.target.files[0]);
+    fileReader.onload = function (e) {
+        selectedRobot.value.knowledge_base = e.target?.result as string;
+    };
+}
 </script>
 
 <template>
@@ -719,14 +730,26 @@ onMounted(() => {
                             <el-form-item label="System Prompt">
                                 <el-input v-model="selectedRobot.system_prompt"/>
                             </el-form-item>
+                            <el-form-item label="Knowledge Base">
+                                <el-button>
+                                    Select a .txt file
+                                    <input type="file" v-on:change="inputKnowledgeFile" accept="text/plain"
+                                           class="opacity-0 absolute top-0 right-0 left-0 bottom-0 !cursor-pointer"/>
+                                </el-button>
+                                <span class="ml-2.5 text-gray-500">{{ knowledgeBaseName }}</span>
+                            </el-form-item>
                             <el-form-item label="Creator">
                                 <el-input v-model="selectedRobot.creator" :disabled="true"/>
                             </el-form-item>
                             <el-form-item label="Price">
                                 <el-input v-model="selectedRobot.price"/>
+                                <p class="text-gray-500 text-xs mt-1">How much NINJA coin worth 1 this robot's token</p>
                             </el-form-item>
                             <el-form-item label="Quota">
                                 <el-input v-model="selectedRobot.quota"/>
+                                <p class="text-gray-500 text-xs mt-1">Input the maximum NINJA coin the user can use, or
+                                    0 as
+                                    infinity</p>
                             </el-form-item>
                             <el-form-item label="Public Time">
                                 <el-input v-model="selectedRobot.time" :disabled="true"/>
