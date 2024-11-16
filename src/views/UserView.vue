@@ -956,7 +956,6 @@ function inputKnowledgeFile(event: any) {
             width="50%"
         >
             <template #default>
-                {{ messages.length }}
                 <div class="flex">
                     <!-- Left user list -->
                     <div class="w-1/3 pr-4 border-r">
@@ -969,7 +968,7 @@ function inputKnowledgeFile(event: any) {
                             >
                                 <div class="flex items-center">
                                     <ElAvatar :src="wrapIcon(message.icon, 'default_avatar.png')" size="small"/>
-                                    <span class="ml-2">{{ message.userid }}</span>
+                                    <span class="ml-2">{{ message.username }}</span>
                                 </div>
                             </div>
                         </ElScrollbar>
