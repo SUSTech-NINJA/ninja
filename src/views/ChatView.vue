@@ -222,17 +222,6 @@ async function sendChat() {
             .catch(_err => {
                 toaster.show('Failed to deduct money', {type: 'error'});
             });
-        coinFormData = new FormData();
-        coinFormData.append('current', (delta / 50).toFixed(0));
-        conn.post('/reward/' + robotInfo.value.info.creator, coinFormData, {
-            headers: {'Authorization': 'Bearer ' + global.token}
-        })
-            .then(_res => {
-            })
-            .catch(_err => {
-                toaster.show('Failed to give reward to creator', {type: 'error'});
-            });
-
         console.log(messages.value);
         conn.get('/title/' + chat.current, {
             headers: {'Authorization': 'Bearer ' + global.token}

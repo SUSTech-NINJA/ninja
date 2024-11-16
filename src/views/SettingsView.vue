@@ -28,7 +28,7 @@
                     width="100"
                 >
                     <template #default="{ row }">
-                        <img :src="row.icon" alt="icon" class="robot-icon"/>
+                        <img :src="wrapIcon(row.icon, 'bot_avatar.png')" alt="icon" class="robot-icon"/>
                     </template>
                 </el-table-column>
 
@@ -71,9 +71,10 @@
         </div>
 
         <div class="bottom-buttons">
-
             <el-tooltip content="Add A New Base-Modal" placement="top">
-                <el-button :icon="Plus" circle class="left-icon-button" @click="openAddingDialog"/>
+                <el-button :icon="Plus" class="left-icon-button" @click="openAddingDialog">
+                    Add Base-Model
+                </el-button>
             </el-tooltip>
 
             <div class="right-buttons">
@@ -92,9 +93,9 @@
             title="Model Setting"
             v-model="settingDialogVisible"
         >
-            <el-form>
+            <el-form label-width="auto">
                 <el-form-item label="Icon">
-                    <ElAvatar :src="settingModel.icon"/>
+                    <ElAvatar :src="wrapIcon(settingModel.icon, 'bot_avatar.png')"/>
                     <ElButton class="ml-2">
                         Select File
                         <input type="file" @change="inputFile"
@@ -110,11 +111,15 @@
                 <el-form-item label="ID">
                     <el-input v-model="settingModel.id" :disabled="!InputEnable"/>
                 </el-form-item>
-                <el-form-item label="Tokens Limit">
-                    <el-input v-model="settingModel.tokensLimit"/>
-                </el-form-item>
-                <el-form-item label="Tokens Price">
+                <el-form-item label="Price">
                     <el-input v-model="settingModel.tokensPrice"/>
+                    <p class="text-gray-500 text-xs mt-1">How much NINJA coin worth 1 this robot's token</p>
+                </el-form-item>
+                <el-form-item label="Quota">
+                    <el-input v-model="settingModel.tokensLimit"/>
+                    <p class="text-gray-500 text-xs mt-1">Input the maximum NINJA coin the user can use, or
+                        0 as
+                        infinity</p>
                 </el-form-item>
             </el-form>
 
@@ -130,7 +135,7 @@
             title="Export Model Evaluation"
             v-model="modelEvalDialog"
         >
-            <el-form>
+            <el-form label-width="auto">
                 <el-form-item label="Select item">
                     <el-dropdown>
                         <span class="el-dropdown-link">
@@ -161,18 +166,17 @@
             title="Add a Model"
             v-model="AddDialogVisible"
         >
-            <el-form-item label="Icon">
-                <ElAvatar :src="settingModel.icon"/>
-                <ElButton class="ml-2">
-                    Select File
-                    <input type="file" @change="inputFile"
-                           class="opacity-0 absolute top-0 right-0 left-0 bottom-0 cursor-pointer"
-                    />
-                </ElButton>
-                <span class="ml-2.5 text-gray-500">{{ settingModel.filename }}</span>
-            </el-form-item>
-
-            <el-form>
+            <el-form label-width="auto">
+                <el-form-item label="Icon">
+                    <ElAvatar :src="wrapIcon(settingModel.icon, 'bot_avatar.png')"/>
+                    <ElButton class="ml-2">
+                        Select File
+                        <input type="file" @change="inputFile"
+                               class="opacity-0 absolute top-0 right-0 left-0 bottom-0 cursor-pointer"
+                        />
+                    </ElButton>
+                    <span class="ml-2.5 text-gray-500">{{ settingModel.filename }}</span>
+                </el-form-item>
                 <el-form-item label="Name">
                     <el-input v-model="settingModel.name"/>
                 </el-form-item>
@@ -186,11 +190,15 @@
                         />
                     </el-select>
                 </el-form-item>
-                <el-form-item label="Tokens Limit">
-                    <el-input v-model="settingModel.tokensLimit"/>
-                </el-form-item>
-                <el-form-item label="Tokens Price">
+                <el-form-item label="Price">
                     <el-input v-model="settingModel.tokensPrice"/>
+                    <p class="text-gray-500 text-xs mt-1">How much NINJA coin worth 1 this robot's token</p>
+                </el-form-item>
+                <el-form-item label="Quota">
+                    <el-input v-model="settingModel.tokensLimit"/>
+                    <p class="text-gray-500 text-xs mt-1">Input the maximum NINJA coin the user can use, or
+                        0 as
+                        infinity</p>
                 </el-form-item>
             </el-form>
 
@@ -210,6 +218,7 @@ import {ArrowDown, Close, Plus} from "@element-plus/icons-vue";
 import {baseModels, createConnection, toasterOptions} from "../config";
 import {useGlobalStore} from "../stores/global";
 import {createToaster} from "@meforma/vue-toaster";
+import {wrapIcon} from "../util.ts";
 
 const toaster = createToaster(toasterOptions);
 const models = ref([] as any[]), curModel = ref<any>(null);
@@ -222,8 +231,8 @@ const settingModel = ref({
     id: '',
     robotid: '',
     name: '',
-    tokensLimit: '',
-    tokensPrice: '',
+    tokensLimit: 0,
+    tokensPrice: 0,
     icon: '',
     filename: '',
 });
@@ -278,8 +287,8 @@ const onDialogConfirm = (mode: string) => {
     let formData = new FormData();
     formData.append('base_model_name', settingModel.value.name);
     formData.append('base_model_id', settingModel.value.id);
-    formData.append('model_tokens_limitation', settingModel.value.tokensLimit);
-    formData.append('price', settingModel.value.tokensPrice);
+    formData.append('model_tokens_limitation', settingModel.value.tokensLimit.toString());
+    formData.append('price', settingModel.value.tokensPrice.toString());
     formData.append('icon', settingModel.value.icon);
 
     let connStr = `/admin/robot/${mode}`;
@@ -295,6 +304,7 @@ const onDialogConfirm = (mode: string) => {
             InputEnable.value = true;
             settingDialogVisible.value = false;
             AddDialogVisible.value = false;
+            global.notifyChange = 1 - global.notifyChange;
         })
         .catch((e) => {
             console.log(e);
@@ -310,6 +320,7 @@ const deleteModel = (index: number) => {
     })
         .then(() => {
             toaster.success('Delete successfully');
+            global.notifyChange = 1 - global.notifyChange;
             fetchModels();
         })
         .catch(() => {

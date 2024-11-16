@@ -7,6 +7,7 @@ const global = useGlobalStore();
 if (global.uuid === '' || global.token === '') {
     global.notLogin = true;
 }
+global.notifyChange = 0;
 </script>
 
 <template>
