@@ -471,7 +471,13 @@ function rateUser() {
 function goToUserProfile() {
     closeUserModal();
     // 导航到 /user/:userId 路径
-    router.push({path: `/user/${userInfo.value.uuid}`});
+    if (route.path.includes('/user')) {
+        router.push({path: `/`});
+        setTimeout(() => {
+            router.push({path: `/user/${userInfo.value.uuid}`});
+        }, 200);
+    } else
+        router.push({path: `/user/${userInfo.value.uuid}`});
 }
 
 // 获取用户信息，用于展示用户主页

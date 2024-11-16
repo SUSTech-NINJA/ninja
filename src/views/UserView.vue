@@ -661,7 +661,7 @@ function inputKnowledgeFile(event: any) {
         <div class="mt-8">
             <h3 class="text-lg font-semibold">Robots</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-
+                <div v-if="robots.length === 0" class="col-span-2 text-gray-500">---</div>
                 <ElCard
                     v-for="(robot, index) in robots"
                     :key="index"
@@ -789,6 +789,7 @@ function inputKnowledgeFile(event: any) {
         <div class="mt-8">
             <h3 class="text-lg font-semibold">Posts</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div v-if="posts.length === 0" class="col-span-2 text-gray-500">---</div>
                 <ElCard v-for="(post, index) in posts" :key="index" class="mb-4" shadow="hover"
                         @click="openPostModal(index)">
                     <div class="flex items-center mb-2">
