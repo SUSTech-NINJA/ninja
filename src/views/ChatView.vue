@@ -128,7 +128,19 @@ function editCur() {
 }
 
 const controller = ref(new AbortController());
-const isStopped = ref(false), deltaSum = ref(0);
+const isStopped = ref(false), deltaSum = ref(0), hasJustSent = ref(false);
+
+document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.key === 'Enter') {
+        if (!hasJustSent.value && !(chatInput.value === '' && files.value.length === 0)) {
+            hasJustSent.value = true;
+            sendChat();
+            setTimeout(() => {
+                hasJustSent.value = false;
+            }, 500);
+        }
+    }
+})
 
 async function sendChat() {
     if (chatInput.value === '' && files.value.length === 0) {
@@ -210,7 +222,6 @@ async function sendChat() {
         } catch (_e) {
         }
         deltaSum.value += delta;
-        console.log(global.coin, delta, deltaSum.value)
         global.coin -= delta;
         let coinFormData = new FormData();
         coinFormData.append('result', global.coin.toString());
@@ -223,20 +234,21 @@ async function sendChat() {
                 toaster.show('Failed to deduct money', {type: 'error'});
             });
         console.log(messages.value);
-        conn.get('/title/' + chat.current, {
-            headers: {'Authorization': 'Bearer ' + global.token}
-        })
-            .then(res => {
-                let data = res.data;
-                editingCur.value = true;
-                titleEditing.value = data;
-                editCur();
+        if (messages.value.length <= 3)
+            conn.get('/title/' + chat.current, {
+                headers: {'Authorization': 'Bearer ' + global.token}
             })
-            .catch(err => {
-                console.log(err);
-                toaster.show('Get title failed', {type: 'error'});
-                messages.value = [];
-            });
+                .then(res => {
+                    let data = res.data;
+                    editingCur.value = true;
+                    titleEditing.value = data;
+                    editCur();
+                })
+                .catch(err => {
+                    console.log(err);
+                    toaster.show('Get title failed', {type: 'error'});
+                    messages.value = [];
+                });
     } catch (err) {
         console.log(err);
         toaster.show('Message send failed', {type: 'error'});
