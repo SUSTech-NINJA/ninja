@@ -7,7 +7,7 @@ export const toasterOptions = {
 
 //export const host = 'http://127.0.0.1:4523/m1/5188287-4853858-default';
 
-export const host = 'http://127.0.0.1:5000';
+export const host = 'https://ninjachat.benx.dev/api';
 
 export function createConnection() {
     return axios.create({
