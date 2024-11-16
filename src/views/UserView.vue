@@ -66,6 +66,7 @@ const chatReplyContent = ref('');
 const currentUserInfo = ref({
     username: '',
     avatar: '',
+    uuid: ''
 });
 
 // Variables for robot rating
@@ -134,6 +135,7 @@ async function fetchCurrentUserInfo() {
             const data = response.data;
             currentUserInfo.value.username = data.UserInfo.name;
             currentUserInfo.value.avatar = data.UserInfo.icon;
+            currentUserInfo.value.uuid = data.UserInfo.uuid;
         }
     } catch (error) {
         ElMessage.error('Failed to fetch current user info');
@@ -260,7 +262,7 @@ async function publishPost() {
 }
 
 // Send a private post message
-async function sendPrivateMessage() {
+async function sendPrivateMessage(mode: string) {
     if (newComment.value.trim() === '') {
         ElMessage.warning('Content cannot be empty');
         return;
@@ -269,13 +271,12 @@ async function sendPrivateMessage() {
         let formData = new FormData();
         formData.append('content', newComment.value);
         formData.append('icon', currentUserInfo.value.avatar);
-        formData.append('uuid', global.uuid);
+        formData.append('uuid', currentUserInfo.value.uuid);
         formData.append('username', currentUserInfo.value.username);
-        if (typeof selectedPostId.value != 'undefined')
+        formData.append('mode', mode);
+        if (typeof selectedPostId.value != 'undefined' && mode === 'post')
             formData.append('postid', selectedPostId.value.toString());
-        api.post('/response', {
-            data: formData,
-        }, {
+        api.post('/response', formData, {
             headers: {'Authorization': 'Bearer ' + global.token}
         })
             .then(res => {
@@ -621,7 +622,7 @@ function inputKnowledgeFile(event: any) {
                         class="mb-4"
                     />
                     <div class="text-center">
-                        <ElButton @click="sendPrivateMessage()" type="primary">
+                        <ElButton @click="sendPrivateMessage('message')" type="primary">
                             Send
                         </ElButton>
                     </div>
@@ -839,7 +840,7 @@ function inputKnowledgeFile(event: any) {
                         class="mt-4"
                     />
                     <div class="text-right mt-2">
-                        <ElButton @click="sendPrivateMessage()" type="primary">Reply</ElButton>
+                        <ElButton @click="sendPrivateMessage('post')" type="primary">Reply</ElButton>
                     </div>
                 </div>
             </template>

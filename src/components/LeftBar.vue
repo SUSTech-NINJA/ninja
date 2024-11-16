@@ -652,7 +652,7 @@ async function fetchUserInfo() {
                     <el-card shadow="hover">
                         <div class="text-center">
                             <el-avatar :src="item.icon" size="large"/>
-                            <p>{{ item.name || item.robot_name }}</p>
+                            <p>Name: {{ item.username || item.robot_name }}</p>
                             <p>ID: {{ item.uuid || item.robotid }}</p>
                             <el-rate :model-value="item.rate" disabled></el-rate>
                         </div>
