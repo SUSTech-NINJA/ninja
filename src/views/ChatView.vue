@@ -166,7 +166,8 @@ async function sendChat() {
             'message': chatInput.value,
             'single-round': isSingleRound.value.toString(),
             'files': JSON.stringify(sources),
-            'mimetypes': JSON.stringify(fileMimes.value)
+            'mimetypes': JSON.stringify(fileMimes.value),
+            'model': (atModel.value !== '') ? atModel.value : robotInfo.value.info.robot_name
         };
         files.value = [];
         fileMimes.value = [];
@@ -404,7 +405,7 @@ const getRobotsSlicer = computed(() => {
                     <template #dropdown>
                         <el-dropdown-menu>
                             <div v-for="item in getRobotsSlicer">
-                                <el-dropdown-item :disabled="item?.robotid === robotid"
+                                <el-dropdown-item v-if="item?.robotid !== robotid"
                                                   @click="atModel = item?.robot_name; atBaseModel = item?.base_model">
                                     <span>{{ item?.robot_name }}</span>
                                 </el-dropdown-item>
