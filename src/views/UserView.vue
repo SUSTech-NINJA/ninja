@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {computed, onMounted, ref} from 'vue';
+import {computed, onMounted, ref, watch} from 'vue';
 import {
     ElAvatar,
     ElButton,
@@ -69,6 +69,11 @@ const currentUserInfo = ref({
     uuid: ''
 });
 
+watch(route, () => {
+    fetchUserInfo();
+    fetchPosts();
+});
+
 // Variables for robot rating
 const robotRating = ref(0);
 const robotComment = ref('');
@@ -99,7 +104,6 @@ async function fetchUserInfo() {
             userInfo.value.uuid = data.UserInfo.uuid;
             userInfo.value.rate = data.UserInfo.rate;
             robots.value = data.robot;
-            console.log(data.robot)
             posts.value = data.post || [];
             selectedPost.value = posts.value[selectedPostId.value as any];
 
