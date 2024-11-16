@@ -242,9 +242,9 @@ async function publishPost() {
     try {
         let formData = new FormData();
         formData.append('content', newPostContent.value);
-        formData.append('icon', currentUserInfo.value.avatar);
+        formData.append('icon', userInfo.value.avatar);
         formData.append('uuid', global.uuid);
-        formData.append('name', currentUserInfo.value.username);
+        formData.append('name', userInfo.value.username);
         const response = await api.post('/post', formData, {
             headers: {'Authorization': 'Bearer ' + global.token}
         });
@@ -270,10 +270,7 @@ async function sendPrivateMessage(mode: string) {
     try {
         let formData = new FormData();
         formData.append('content', newComment.value);
-        // formData.append('icon', currentUserInfo.value.avatar);
-        formData.append('uuid', currentUserInfo.value.uuid);
-        // formData.append('username', currentUserInfo.value.username);
-        // formData.append('mode', mode);
+        formData.append('uuid', userInfo.value.uuid);
         if (typeof selectedPostId.value != 'undefined' && mode === 'post')
             formData.append('postid', selectedPostId.value.toString());
         if (mode === 'post')
