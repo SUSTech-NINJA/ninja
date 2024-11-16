@@ -225,7 +225,7 @@ const cancelRecharge = () => {
     showRechargeDialog.value = false;
 };
 const selectRechargeOption = (option: any) => {
-    const newTokenAmount = global.coin + option.coins;
+    const newTokenAmount = global.coin <= 0 ? option.coins : global.coin + option.coins;
     let formData = new FormData();
     formData.append('result', newTokenAmount);
     conn.post('/shop/buy_package', formData, {
@@ -624,7 +624,7 @@ async function fetchUserInfo() {
 
     <div class="flex-none w-full grid grid-cols-2 items-center">
         <div class="text-left text-sm fit-content">
-            Current coins: {{ global.coin?.toFixed(0) }}
+            Current coins: {{ global.coin >= 0 ? global.coin?.toFixed(0) : 0 }}
         </div>
         <div class="text-right">
             <el-button @click="addToken">Buy More</el-button>
@@ -875,7 +875,7 @@ async function fetchUserInfo() {
     >
         <!-- remain coins -->
         <div class="text-center mb-4">
-            <p class="text-lg font-bold">Current Coins: {{ global.coin?.toFixed(0) }}</p>
+            <p class="text-lg font-bold">Current Coins: {{ global.coin >= 0 ? global.coin?.toFixed(0) : 0 }}</p>
         </div>
 
         <div class="grid grid-cols-2 gap-4"> <!-- charge options -->
