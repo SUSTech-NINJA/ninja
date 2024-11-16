@@ -293,7 +293,7 @@ function inputKnowledgeFile(event: any) {
 
 function submitBotCreation() {
     let formData = new FormData();
-    if (createBotData.value.base_model_id === '' || createBotData.value.system_prompt === '' || createBotData.value.price === 0) {
+    if (createBotData.value.base_model_id === '' || createBotData.value.system_prompt === '') {
         toaster.show('Please fill in the required fields', {type: 'warning'});
         return;
     }

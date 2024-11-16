@@ -276,18 +276,31 @@ async function sendPrivateMessage(mode: string) {
         formData.append('mode', mode);
         if (typeof selectedPostId.value != 'undefined' && mode === 'post')
             formData.append('postid', selectedPostId.value.toString());
-        api.post('/response', formData, {
-            headers: {'Authorization': 'Bearer ' + global.token}
-        })
-            .then(res => {
-                ElMessage.success('Message sent successfully');
-                newComment.value = '';
-                fetchUserInfo();
+        if (mode === 'post')
+            api.post('/response', formData, {
+                headers: {'Authorization': 'Bearer ' + global.token}
+            })
+                .then(res => {
+                    ElMessage.success('Message sent successfully');
+                    newComment.value = '';
+                    fetchUserInfo();
 
+                })
+                .catch(err => {
+                    ElMessage.error('Failed to send message');
+                })
+        else if (mode === 'message')
+            api.post('/send_message', formData, {
+                headers: {'Authorization': 'Bearer ' + global.token}
             })
-            .catch(err => {
-                ElMessage.error('Failed to send message');
-            })
+                .then(res => {
+                    ElMessage.success('Message sent successfully');
+                    newComment.value = '';
+                    fetchUserInfo();
+                })
+                .catch(err => {
+                    ElMessage.error('Failed to send message');
+                })
 
     } catch (error) {
         ElMessage.error('Failed to send message');
