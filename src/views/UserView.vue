@@ -38,6 +38,7 @@ const userInfo = ref({
     rate: 0,
     filename: '',
 });
+const selectedRobotIcon = ref('');
 const isOwnProfile = computed(() => {
     const userId = route.params.userId as string;
     return !userId || userId === global.uuid;
@@ -416,6 +417,15 @@ function inputFile(event: any) {
     };
 }
 
+function inputRobotFile(event: any) {
+    selectedRobotIcon.value = event.target.files[0].name;
+    let fileReader = new FileReader();
+    fileReader.readAsDataURL(event.target.files[0]);
+    fileReader.onload = function (e) {
+        selectedRobot.value.icon = e.target?.result as any;
+    };
+}
+
 function deleteRobot(robotId: any) {
     try {
         api.delete(`/robot/${robots.value[robotId].robotid}`, {
@@ -436,6 +446,7 @@ function deleteRobot(robotId: any) {
 
 function editRobot(robotId: any) {
     try {
+
         let formData = new FormData();
         formData.append('icon', selectedRobot.value.icon);
         formData.append('robot_name', selectedRobot.value.robot_name);
@@ -447,7 +458,7 @@ function editRobot(robotId: any) {
         formData.append('quota', selectedRobot.value.quota);
         formData.append('time', selectedRobot.value.time);
         formData.append('popularity', selectedRobot.value.popularity);
-        api.post(`/robot/${robots.value[robotId].robotid}`, formData, {
+        api.post(`/robot/${selectedRobot.value.robotid}`, formData, {
             headers: {'Authorization': 'Bearer ' + global.token}
         }).then(res => {
             ElMessage.success('Robot edited successfully');
@@ -729,11 +740,11 @@ function inputKnowledgeFile(event: any) {
                                 <ElAvatar :src="selectedRobot.icon"/>
                                 <ElButton class="ml-2">
                                     Select File
-                                    <input type="file" @change="inputFile"
+                                    <input type="file" @change="inputRobotFile"
                                            class="opacity-0 absolute top-0 right-0 left-0 bottom-0 cursor-pointer"
                                     />
                                 </ElButton>
-                                <span class="ml-2.5 text-gray-500">{{ userInfo.filename }}</span>
+                                <span class="ml-2.5 text-gray-500">{{ selectedRobotIcon }}</span>
 
                             </el-form-item>
                             <el-form-item label="Name">
