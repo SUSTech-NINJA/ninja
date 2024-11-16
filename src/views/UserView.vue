@@ -270,10 +270,10 @@ async function sendPrivateMessage(mode: string) {
     try {
         let formData = new FormData();
         formData.append('content', newComment.value);
-        formData.append('icon', currentUserInfo.value.avatar);
+        // formData.append('icon', currentUserInfo.value.avatar);
         formData.append('uuid', currentUserInfo.value.uuid);
-        formData.append('username', currentUserInfo.value.username);
-        formData.append('mode', mode);
+        // formData.append('username', currentUserInfo.value.username);
+        // formData.append('mode', mode);
         if (typeof selectedPostId.value != 'undefined' && mode === 'post')
             formData.append('postid', selectedPostId.value.toString());
         if (mode === 'post')
@@ -318,18 +318,17 @@ async function rateUser() {
         return;
     }
     try {
-        const response = await api.post(
-            `/evaluate_user/${userInfo.value.uuid}`,
-            {
-                rate: newRating.value,
-            }, {
-                headers: {'Authorization': 'Bearer ' + global.token}
-            }
-        );
+        let formData = new FormData();
+        formData.append('rate', newRating.value);
+        const response = await api.post(`/evaluate_user/${userInfo.value.uuid}`, formData, {
+            headers: {'Authorization': 'Bearer ' + global.token}
+        });
         if (response.status === 200) {
             ElMessage.success('Rating sent successfully');
-            showRateDialog.value = false;
             newRating.value = 0;
+            showRateDialog.value = false;
+            // Refresh user info
+            await fetchUserInfo();
         } else {
             ElMessage.error('Failed to send rating');
         }
