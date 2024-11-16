@@ -604,7 +604,7 @@ async function fetchUserInfo() {
                 No chat available.
             </div>
         </div>
-        <el-card v-for="item in chat.chatList" shadow="hover" class="mb-3 relative"
+        <el-card v-for="item in chat.chatList" shadow="hover" class="mb-3 relative mr-[5px]"
                  :class="{'!border-[1px] !border-blue-500': chat.current === item.chatid}"
                  @click="chat.current = item.chatid; fetchFlag = !fetchFlag; gotoChat()">
             <div class="flex-none w-full text-left">
