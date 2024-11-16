@@ -16,7 +16,7 @@ import {
 import {ChatDotRound, Close, Delete, Edit, View} from '@element-plus/icons-vue';
 import {useGlobalStore} from '../stores/global';
 import {RouterLink, useRoute, useRouter} from 'vue-router';
-import {getTimeString} from "../util";
+import {getTimeString, wrapIcon} from "../util";
 import {createConnection} from "../config";
 
 const global = useGlobalStore();
@@ -107,7 +107,6 @@ async function fetchUserInfo() {
             robots.value = data.robot;
             posts.value = data.post || [];
             selectedPost.value = posts.value[selectedPostId.value as any];
-
         }
     } catch (error) {
         ElMessage.error('Failed to fetch user info');
@@ -283,25 +282,25 @@ async function sendPrivateMessage(mode: string) {
             api.post('/response', formData, {
                 headers: {'Authorization': 'Bearer ' + global.token}
             })
-                .then(res => {
+                .then(_res => {
                     ElMessage.success('Message sent successfully');
                     newComment.value = '';
                     fetchUserInfo();
 
                 })
-                .catch(err => {
+                .catch(_err => {
                     ElMessage.error('Failed to send message');
                 })
         else if (mode === 'message')
             api.post('/send_message', formData, {
                 headers: {'Authorization': 'Bearer ' + global.token}
             })
-                .then(res => {
+                .then(_res => {
                     ElMessage.success('Message sent successfully');
                     newComment.value = '';
                     fetchUserInfo();
                 })
-                .catch(err => {
+                .catch(_err => {
                     ElMessage.error('Failed to send message');
                 })
 
@@ -322,7 +321,7 @@ async function rateUser() {
     }
     try {
         let formData = new FormData();
-        formData.append('rate', newRating.value);
+        formData.append('rate', newRating.value.toString());
         const response = await api.post(`/evaluate_user/${userInfo.value.uuid}`, formData, {
             headers: {'Authorization': 'Bearer ' + global.token}
         });
@@ -431,12 +430,13 @@ function deleteRobot(robotId: any) {
         api.delete(`/robot/${robots.value[robotId].robotid}`, {
             headers: {'Authorization': 'Bearer ' + global.token}
         })
-            .then(res => {
+            .then(_res => {
                 ElMessage.success('Robot deleted successfully');
                 fetchUserInfo();
                 showIsDeletedDialog.value = false;
+                global.notifyChange = 1 - global.notifyChange;
             })
-            .catch(err => {
+            .catch(_err => {
                 ElMessage.error('Failed to delete robot');
             })
     } catch (error) {
@@ -460,11 +460,12 @@ function editRobot(robotId: any) {
         formData.append('popularity', selectedRobot.value.popularity);
         api.post(`/robot/${selectedRobot.value.robotid}`, formData, {
             headers: {'Authorization': 'Bearer ' + global.token}
-        }).then(res => {
+        }).then(_res => {
             ElMessage.success('Robot edited successfully');
             fetchUserInfo();
             showEditDialog.value = false;
-        }).catch(err => {
+            global.notifyChange = 1 - global.notifyChange;
+        }).catch(_err => {
             ElMessage.error('Failed to edit robot');
         })
 
@@ -528,7 +529,8 @@ function inputKnowledgeFile(event: any) {
         <div class="mb-4">
             <div v-if="!editMode">
                 <div class="flex flex-row justify-center">
-                    <ElAvatar :src="userInfo.avatar" size="large" class="mb-4"/>
+                    <ElAvatar :src="wrapIcon(userInfo.avatar, 'default_avatar.png')" size="large"
+                              class="mb-4"/>
                     <div class="text-left ml-4">
                         <p><strong>Username:</strong> {{ userInfo.username }}</p>
                         <p><strong>Intro:</strong> {{ userInfo.intro }}</p>
@@ -542,7 +544,7 @@ function inputKnowledgeFile(event: any) {
             <div v-else>
                 <ElForm label-width="auto">
                     <ElFormItem label="Avatar">
-                        <ElAvatar :src="userInfo.avatar"/>
+                        <ElAvatar :src="wrapIcon(userInfo.avatar, 'default_avatar.png')"/>
                         <!-- Use input[type="file"] to upload files -->
                         <ElButton class="ml-2">
                             Select File
@@ -681,8 +683,12 @@ function inputKnowledgeFile(event: any) {
                     class="text-left"
                 >
                     <div class="flex items-center mb-4">
-                        <ElAvatar :src="robot.icon" size="large"/>
-                        <h4 class="text-lg font-semibold ml-4">{{ robot.robot_name }}</h4>
+                        <ElAvatar
+                            :src="wrapIcon(robot.icon, 'bot_avatar.png')"
+                            size="large"/>
+                        <h4 class="text-lg font-semibold ml-4">{{ robot.robot_name }}
+                            <span class="ml-1 text-xs text-gray-400 italic" v-if="robot.is_default">Default</span>
+                        </h4>
                     </div>
                     <p><b>Model:</b> {{ robot.base_model }}</p>
                     <p><b>Price:</b> {{ robot.price }}</p>
@@ -692,21 +698,21 @@ function inputKnowledgeFile(event: any) {
                         <ElRate :model-value="robot.rate" disabled allow-half class="ml-1"/>
                     </div>
 
-                    <el-button class=" mt-2" @click="openRobotModal(index)">
+                    <el-button class="mt-2" @click="openRobotModal(index)">
                         <el-icon>
                             <View/>
                         </el-icon>
                         <span class="ml-2">View bot</span>
                     </el-button>
-
-                    <el-button class=" mt-2" @click.stop="showIsDeletedDialog=true; getSelectedRobot(index)">
+                    <el-button class="mt-2" :disabled="robot.is_default"
+                               @click.stop="showIsDeletedDialog=true; getSelectedRobot(index)">
                         <el-icon>
                             <Delete/>
                         </el-icon>
                         <span class="ml-2">Delete bot</span>
                     </el-button>
 
-                    <el-button class=" mt-2" @click.stop="showEditDialog=true; getSelectedRobot(index)">
+                    <el-button class="mt-2" @click.stop="showEditDialog=true; getSelectedRobot(index)">
                         <el-icon>
                             <Edit/>
                         </el-icon>
@@ -735,9 +741,11 @@ function inputKnowledgeFile(event: any) {
                         @click.stop
                         :show-close="false"
                     >
-                        <el-form>
+                        <el-form label-width="auto">
                             <el-form-item label="Icon">
-                                <ElAvatar :src="selectedRobot.icon"/>
+                                <ElAvatar
+                                    :src="wrapIcon(robot.icon, 'bot_avatar.png')"
+                                    size="large"/>
                                 <ElButton class="ml-2">
                                     Select File
                                     <input type="file" @change="inputRobotFile"
@@ -745,7 +753,6 @@ function inputKnowledgeFile(event: any) {
                                     />
                                 </ElButton>
                                 <span class="ml-2.5 text-gray-500">{{ selectedRobotIcon }}</span>
-
                             </el-form-item>
                             <el-form-item label="Name">
                                 <el-input v-model="selectedRobot.robot_name"/>
@@ -805,7 +812,7 @@ function inputKnowledgeFile(event: any) {
                 <ElCard v-for="(post, index) in posts" :key="index" class="mb-4" shadow="hover"
                         @click="openPostModal(index)">
                     <div class="flex items-center mb-2">
-                        <ElAvatar :src="post.icon" size="small"/>
+                        <ElAvatar :src="wrapIcon(post.icon, 'default_avatar.png')" size="small"/>
                         <span class="ml-2">{{ post.username }}</span>
                         <span class="ml-auto text-gray-500">{{ getTimeString(post.time) }}</span>
                     </div>
@@ -828,7 +835,8 @@ function inputKnowledgeFile(event: any) {
                 <div class="flex flex-row">
                     <div class="ml-2.5 text-left flex flex-col">
                         <div>
-                            <ElAvatar :src="selectedPost && selectedPost.icon" size="large"/>
+                            <ElAvatar :src="wrapIcon(selectedPost && selectedPost.icon, 'default_avatar.png')"
+                                      size="large"/>
                         </div>
                         <div class="w-20">
                             <b>{{ selectedPost && selectedPost.username }}</b><br/>
@@ -844,7 +852,7 @@ function inputKnowledgeFile(event: any) {
                     <div v-for="(response, index) in selectedPost.responses" class="flex flex-row mt-4">
                         <div class="ml-2.5 text-left flex flex-col">
                             <div>
-                                <ElAvatar :src="response.icon" size="large"/>
+                                <ElAvatar :src="wrapIcon(response.icon, 'default_avatar.png')" size="large"/>
                             </div>
                             <div class="w-20">
                                 <b>{{ response.username }}</b><br/>
@@ -880,7 +888,7 @@ function inputKnowledgeFile(event: any) {
         >
             <template #default>
                 <ElAvatar
-                    :src="selectedRobot && selectedRobot.icon"
+                    :src="wrapIcon(selectedRobot && selectedRobot.icon, 'bot_avatar.png')"
                     size="large"
                     class="mb-4"
                 />
@@ -957,7 +965,7 @@ function inputKnowledgeFile(event: any) {
                                 @click="viewChatHistory(message)"
                             >
                                 <div class="flex items-center">
-                                    <ElAvatar :src="message.icon" size="small"/>
+                                    <ElAvatar :src="wrapIcon(message.icon, 'default_avatar.png')" size="small"/>
                                     <span class="ml-2">{{ message.userid }}</span>
                                 </div>
                             </div>
@@ -972,7 +980,7 @@ function inputKnowledgeFile(event: any) {
                                 class="mb-4"
                             >
                                 <div class="flex items-center mb-2">
-                                    <ElAvatar :src="chat.icon" size="small"/>
+                                    <ElAvatar :src="wrapIcon(chat.icon, 'default_avatar.png')" size="small"/>
                                     <span class="ml-2">{{ chat.sender }}</span>
                                     <span class="ml-auto text-gray-500">
                                         {{ chat.timestamp }}

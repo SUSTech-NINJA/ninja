@@ -81,6 +81,13 @@ onMounted(() => {
     fetcher();
     fetchUserInfo();
 });
+
+watch(() => global.notifyChange, () => {
+    if (!global.token) return;
+    fetcher();
+    fetchUserInfo();
+});
+
 let lastFetchFlag = false;
 chat.$subscribe(() => {
     if (fetchFlag.value !== lastFetchFlag) {
