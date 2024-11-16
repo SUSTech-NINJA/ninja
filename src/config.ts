@@ -20,6 +20,7 @@ export const baseModels = [
     'gpt-3.5-turbo',
     'gpt-4',
     'gpt-4o',
+    'gpt-4o-mini',
     'gpt-o1',
     'gpt-4-vision-preview'
 ];

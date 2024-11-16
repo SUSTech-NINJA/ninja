@@ -16,7 +16,6 @@ import {
 import {ChatDotRound, Close, Delete, Edit, View} from '@element-plus/icons-vue';
 import {useGlobalStore} from '../stores/global';
 import {RouterLink, useRoute, useRouter} from 'vue-router';
-import dayjs from 'dayjs';
 import {getTimeString} from "../util";
 import {createConnection} from "../config";
 
@@ -216,7 +215,7 @@ async function sendChatReply() {
         let formData = new FormData();
         formData.append('content', chatReplyContent.value);
         formData.append('uuid', global.uuid);
-        const response = await api.post('/send_message', payload, {
+        const response = await api.post('/send_message', formData, {
             headers: {'Authorization': 'Bearer ' + global.token}
         });
         if (response.status === 200) {
@@ -261,7 +260,7 @@ async function publishPost() {
 }
 
 // Send a private post message
-async function sendPrivateMessage(mode: string) {
+async function sendPrivateMessage() {
     if (newComment.value.trim() === '') {
         ElMessage.warning('Content cannot be empty');
         return;
@@ -272,7 +271,8 @@ async function sendPrivateMessage(mode: string) {
         formData.append('icon', currentUserInfo.value.avatar);
         formData.append('uuid', global.uuid);
         formData.append('username', currentUserInfo.value.username);
-        formData.append('postid', selectedPostId.value);
+        if (typeof selectedPostId.value != 'undefined')
+            formData.append('postid', selectedPostId.value.toString());
         api.post('/response', {
             data: formData,
         }, {
@@ -610,7 +610,7 @@ onMounted(() => {
                         class="mb-4"
                     />
                     <div class="text-center">
-                        <ElButton @click="sendPrivateMessage('message')" type="primary">
+                        <ElButton @click="sendPrivateMessage()" type="primary">
                             Send
                         </ElButton>
                     </div>
@@ -662,14 +662,14 @@ onMounted(() => {
                         <span class="ml-2">View bot</span>
                     </el-button>
 
-                    <el-button class=" mt-2" @click.stop="showIsDeletedDialog=true;getSelectedRobot(index)">
+                    <el-button class=" mt-2" @click.stop="showIsDeletedDialog=true; getSelectedRobot(index)">
                         <el-icon>
                             <Delete/>
                         </el-icon>
                         <span class="ml-2">Delete bot</span>
                     </el-button>
 
-                    <el-button class=" mt-2" @click.stop="showEditDialog=true;getSelectedRobot(index)">
+                    <el-button class=" mt-2" @click.stop="showEditDialog=true; getSelectedRobot(index)">
                         <el-icon>
                             <Edit/>
                         </el-icon>
@@ -678,8 +678,7 @@ onMounted(() => {
 
                     <ElDialog
                         v-model="showIsDeletedDialog"
-                        title="Delete Bot"
-                        :title="selectedRobot && selectedRobot.robot_name"
+                        :title="'Delete Bot'"
                         width="30%"
                         @click.stop
                         :show-close="false"
@@ -694,9 +693,8 @@ onMounted(() => {
 
                     <!-- Edit dialog -->
                     <el-dialog
-                        title="Robot Edit"
                         v-model="showEditDialog"
-                        :title="selectedRobot && selectedRobot.robot_name"
+                        :title="'Robot Edit'"
                         @click.stop
                         :show-close="false"
                     >
@@ -818,7 +816,7 @@ onMounted(() => {
                         class="mt-4"
                     />
                     <div class="text-right mt-2">
-                        <ElButton @click="sendPrivateMessage('post')" type="primary">Reply</ElButton>
+                        <ElButton @click="sendPrivateMessage()" type="primary">Reply</ElButton>
                     </div>
                 </div>
             </template>
