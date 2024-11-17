@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {FileInfo, useChatStore} from "../stores/chat";
-import {computed, onMounted, ref} from "vue";
+import {computed, nextTick, onMounted, ref} from "vue";
 import {createConnection, host, toasterOptions, visualModels} from "../config";
 import {createToaster} from "@meforma/vue-toaster";
 import {ArrowDown, Check, Cpu, Delete, EditPen, More, User} from "@element-plus/icons-vue"; //@ts-ignore
@@ -27,6 +27,7 @@ onMounted(() => {
     fetcher();
 });
 let lastFetchFlag = false;
+const chatBox = ref();
 chat.$subscribe(() => {
     if (!global.token) return;
     if (fetchFlag.value !== lastFetchFlag) {
@@ -169,6 +170,9 @@ async function sendChat() {
             role: 'assistant',
             content: ''
         });
+        await nextTick(() => {
+            (chatBox.value as HTMLElement).scrollTop = (chatBox.value as HTMLElement).scrollHeight;
+        });
         let last = messages.value.length - 1;
         let sources = [];
         for (let i = 0; i < files.value.length; i++) {
@@ -215,6 +219,9 @@ async function sendChat() {
                 const {done, value} = await reader.read();
                 if (done) break;
                 messages.value[last].content += new TextDecoder().decode(value);
+                await nextTick(() => {
+                    (chatBox.value as HTMLElement).scrollTop = (chatBox.value as HTMLElement).scrollHeight;
+                });
             }
         }
         try {
@@ -430,7 +437,7 @@ const getRobotsSlicer = computed(() => {
                 </el-dropdown>
             </div>
         </div>
-        <div class="grow overflow-scroll">
+        <div class="flex-grow overflow-scroll" ref="chatBox">
             <div v-for="(item, index) in messages" v-show="item.role !== 'system'" :key="item.id"
                  class="flex flex-col mb-4">
                 <div class="flex" :class="item.role === 'user' ? 'flex-row-reverse' : ''">
