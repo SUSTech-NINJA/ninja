@@ -429,7 +429,7 @@ function inputRobotFile(event: any) {
 
 function deleteRobot(robotId: any) {
     try {
-        api.delete(`/robot/${robots.value[robotId].robotid}`, {
+        api.delete(`/robot/${selectedRobot.value.robotid}`, {
             headers: {'Authorization': 'Bearer ' + global.token}
         })
             .then(_res => {
