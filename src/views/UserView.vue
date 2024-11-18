@@ -599,28 +599,6 @@ function inputKnowledgeFile(event: any) {
                     <ElButton type="primary" @click="showPostDialog = true">Create Post</ElButton>
                     <ElButton @click="toggleEditMode" type="primary">Edit Info</ElButton>
                 </div>
-                <!-- Post Dialog -->
-                <ElDialog
-                    v-model="showPostDialog"
-                    title="Create Post"
-                    width="50%"
-                >
-                    <ElInput
-                        type="textarea"
-                        v-model="newPostContent"
-                        placeholder="Enter post content"
-                        class="mb-3"
-                        :autosize="{ minRows: 4, maxRows: 6 }"
-                    />
-                    <div class="grid grid-cols-2">
-                        <div class="text-gray-500 flex justify-start items-center">
-                            <span><b>*Markdown*</b> syntax is supported.</span>
-                        </div>
-                        <div class="text-right">
-                            <ElButton @click="publishPost" type="primary">Send</ElButton>
-                        </div>
-                    </div>
-                </ElDialog>
             </div>
             <div v-else>
                 <div class="flex justify-center space-x-4">
@@ -634,56 +612,67 @@ function inputKnowledgeFile(event: any) {
                         Rate
                     </ElButton>
                 </div>
-                <!-- Post Dialog -->
-                <ElDialog
-                    v-model="showPostDialog"
-                    title="Create Post"
-                    width="30%"
-                >
-                    <ElInput
-                        type="textarea"
-                        v-model="newPostContent"
-                        placeholder="Enter post content"
-                        class="mb-4"
-                    />
-                    <div class="text-center">
-                        <ElButton @click="publishPost" type="primary">Send</ElButton>
-                    </div>
-                </ElDialog>
-                <!-- Message Dialog -->
-                <ElDialog
-                    v-model="showMessageDialog"
-                    title="Send Message"
-                    width="30%"
-                >
-                    <ElInput
-                        type="textarea"
-                        v-model="newComment"
-                        placeholder="Enter message content"
-                        class="mb-4"
-                    />
-                    <div class="text-center">
-                        <ElButton @click="sendPrivateMessage('message')" type="primary">
-                            Send
-                        </ElButton>
-                    </div>
-                </ElDialog>
-                <!-- Rate Dialog -->
-                <ElDialog
-                    v-model="showRateDialog"
-                    title="Rate User"
-                    width="30%"
-                >
-                    <div class="flex items-center justify-center mb-4">
-                        <span class="mr-2">Rating:</span>
-                        <ElRate v-model="newRating" allow-half/>
-                    </div>
-                    <div class="text-center">
-                        <ElButton @click="rateUser" type="primary">Submit Rate</ElButton>
-                    </div>
-                </ElDialog>
             </div>
         </div>
+        <!-- Post Dialog -->
+        <ElDialog
+            v-model="showPostDialog"
+            title="Create Post"
+            width="50%"
+        >
+            <ElInput
+                type="textarea"
+                v-model="newPostContent"
+                placeholder="Enter post content"
+                class="mb-3"
+                :autosize="{ minRows: 4, maxRows: 6 }"
+            />
+            <div class="grid grid-cols-3">
+                <div class="text-gray-500 col-span-2 flex justify-start items-center">
+                    <span><b>*Markdown*</b> syntax is supported.</span>
+                </div>
+                <div class="text-right">
+                    <ElButton @click="publishPost" type="primary">Send</ElButton>
+                </div>
+            </div>
+        </ElDialog>
+        <!-- Message Dialog -->
+        <ElDialog
+            v-model="showMessageDialog"
+            title="Send Message"
+            width="40%"
+        >
+            <ElInput
+                type="textarea"
+                v-model="newComment"
+                placeholder="Enter message content"
+                class="mb-4"
+            />
+            <div class="grid grid-cols-3">
+                <div class="text-gray-500 col-span-2 flex justify-start items-center">
+                    <span><b>*Markdown*</b> syntax is supported.</span>
+                </div>
+                <div class="text-right">
+                    <ElButton @click="sendPrivateMessage('message')" type="primary">
+                        Send
+                    </ElButton>
+                </div>
+            </div>
+        </ElDialog>
+        <!-- Rate Dialog -->
+        <ElDialog
+            v-model="showRateDialog"
+            title="Rate User"
+            width="30%"
+        >
+            <div class="flex items-center justify-center mb-4">
+                <span class="mr-2">Rating:</span>
+                <ElRate v-model="newRating" allow-half/>
+            </div>
+            <div class="text-center">
+                <ElButton @click="rateUser" type="primary">Submit Rate</ElButton>
+            </div>
+        </ElDialog>
 
         <!-- Robots Section -->
         <div class="mt-8">
@@ -883,8 +872,8 @@ function inputKnowledgeFile(event: any) {
                         :autosize="{minRows: 3, maxRows: 5}"
                         class="mt-4"
                     />
-                    <div class="grid grid-cols-2 mt-2">
-                        <div class="text-gray-500 flex justify-start items-center">
+                    <div class="grid grid-cols-3 mt-2">
+                        <div class="text-gray-500 col-span-2 flex justify-start items-center">
                             <span><b>*Markdown*</b> syntax is supported.</span>
                         </div>
                         <div class="text-right">
@@ -1003,7 +992,7 @@ function inputKnowledgeFile(event: any) {
                                 </div>
                                 <el-card shadow="never" class="ml-3 mr-3 text-sm w-fit user-dialog-chat"
                                          :class="chat.sender === global.uuid ? 'bg-blue-50' : 'bg-neutral-50'">
-                                    {{ chat.content }}
+                                    <div v-html="sanitizeHtml(marked.parse(chat.content) as string)"></div>
                                 </el-card>
                             </div>
                         </ElScrollbar>
@@ -1015,9 +1004,16 @@ function inputKnowledgeFile(event: any) {
                                 placeholder="Enter reply content"
                                 class="mt-4"
                             />
-                            <ElButton type="primary" @click="sendChatReply" class="mt-2">
-                                Send
-                            </ElButton>
+                            <div class="grid grid-cols-3 mt-2">
+                                <div class="text-gray-500 col-span-2 flex justify-start items-center">
+                                    <span><b>*Markdown*</b> syntax is supported.</span>
+                                </div>
+                                <div class="text-right">
+                                    <ElButton type="primary" @click="sendChatReply">
+                                        Send
+                                    </ElButton>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
