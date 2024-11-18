@@ -317,7 +317,7 @@ function submitBotCreation() {
         .then(_res => {
             createBotDialog.value = false;
             toaster.show('Bot creation success', {type: 'success'});
-            fetcher();
+            global.notifyChange = 1 - global.notifyChange;
         })
         .catch(_err => {
             toaster.show('Bot creation failed', {type: 'error'});
@@ -459,19 +459,6 @@ function rateUser() {
         toaster.show('You cannot rate yourself', {type: 'warning'});
         return;
     }
-    // conn.post(`/evaluate_user/${userInfo.value.uuid}`, {
-    //     rate: newRating.value,
-    // }, {
-    //     headers: {'Authorization': 'Bearer ' + global.token}
-    // })
-    //     .then(_res => {
-    //         toaster.show('Rating sent successfully', {type: 'success'});
-    //         showRateDialog.value = false;
-    //         getUserInfo(userInfo.value.uuid); // 刷新用户信息
-    //     })
-    //     .catch(_err => {
-    //         toaster.show('Failed to send rating', {type: 'error'});
-    //     });
     try {
         let formData = new FormData();
         formData.append('rate', newRating.value.toString());
