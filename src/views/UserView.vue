@@ -18,6 +18,8 @@ import {useGlobalStore} from '../stores/global';
 import {RouterLink, useRoute, useRouter} from 'vue-router';
 import {getTimeString, wrapIcon} from "../util";
 import {createConnection} from "../config";
+import {marked} from "marked";
+import sanitizeHtml from 'sanitize-html';
 
 const global = useGlobalStore();
 const router = useRouter();
@@ -75,6 +77,11 @@ const currentUserInfo = ref({
 watch(route, () => {
     fetchUserInfo();
     fetchPosts();
+});
+
+watch(() => global.notifyChange, () => {
+    if (!global.token) return;
+    fetchUserInfo();
 });
 
 // Variables for robot rating
@@ -524,7 +531,6 @@ function inputKnowledgeFile(event: any) {
                     </ElIcon>
                 </RouterLink>
             </div>
-
         </div>
 
         <!-- User Info Section -->
@@ -597,16 +603,22 @@ function inputKnowledgeFile(event: any) {
                 <ElDialog
                     v-model="showPostDialog"
                     title="Create Post"
-                    width="30%"
+                    width="50%"
                 >
                     <ElInput
                         type="textarea"
                         v-model="newPostContent"
                         placeholder="Enter post content"
-                        class="mb-4"
+                        class="mb-3"
+                        :autosize="{ minRows: 4, maxRows: 6 }"
                     />
-                    <div class="text-center">
-                        <ElButton @click="publishPost" type="primary">Send</ElButton>
+                    <div class="grid grid-cols-2">
+                        <div class="text-gray-500 flex justify-start items-center">
+                            <span><b>*Markdown*</b> syntax is supported.</span>
+                        </div>
+                        <div class="text-right">
+                            <ElButton @click="publishPost" type="primary">Send</ElButton>
+                        </div>
                     </div>
                 </ElDialog>
             </div>
@@ -818,10 +830,7 @@ function inputKnowledgeFile(event: any) {
                         <span class="ml-2">{{ post.username }}</span>
                         <span class="ml-auto text-gray-500">{{ getTimeString(post.time) }}</span>
                     </div>
-                    <p class="text-left text-gray-700">{{ post.content }}</p>
-                    <!--                    <div v-if="post.type === 'rate'" class="mt-1">-->
-                    <!--                        <ElRate :model-value="post.rate" disabled allow-half class="ml-1"/>-->
-                    <!--                    </div>-->
+                    <p class="text-left text-gray-700" v-html="sanitizeHtml(marked.parse(post.content) as string)"></p>
                 </ElCard>
             </div>
         </div>
@@ -845,9 +854,8 @@ function inputKnowledgeFile(event: any) {
                             <p class="text-xs">{{ selectedPost && selectedPost.time }}</p>
                         </div>
                     </div>
-                    <div class="text-left ml-2 p-4 border-gray-300 border-l-[1px] flex-grow bg-gray-50">
-                        {{ selectedPost && selectedPost.content }}
-                    </div>
+                    <div class="text-left ml-2 p-4 border-gray-300 border-l-[1px] flex-grow bg-gray-50"
+                         v-html="sanitizeHtml(marked.parse(selectedPost && selectedPost.content) as string)"></div>
                 </div>
                 <hr class="mt-2"/>
                 <div class="relative overflow-scroll max-h-[320px]">
@@ -862,8 +870,8 @@ function inputKnowledgeFile(event: any) {
                             </div>
                         </div>
                         <div class="text-left ml-2 p-4 border-gray-300 border-l-[1px] flex-grow"
-                             :class="{'bg-blue-50': index % 2 === 0, 'bg-neutral-50': index % 2 === 1}">
-                            {{ response.content }}
+                             :class="{'bg-blue-50': index % 2 === 0, 'bg-neutral-50': index % 2 === 1}"
+                             v-html="sanitizeHtml(marked.parse(response.content) as string)">
                         </div>
                     </div>
                 </div>
@@ -875,8 +883,13 @@ function inputKnowledgeFile(event: any) {
                         :autosize="{minRows: 3, maxRows: 5}"
                         class="mt-4"
                     />
-                    <div class="text-right mt-2">
-                        <ElButton @click="sendPrivateMessage('post')" type="primary">Reply</ElButton>
+                    <div class="grid grid-cols-2 mt-2">
+                        <div class="text-gray-500 flex justify-start items-center">
+                            <span><b>*Markdown*</b> syntax is supported.</span>
+                        </div>
+                        <div class="text-right">
+                            <ElButton @click="sendPrivateMessage('post')" type="primary">Reply</ElButton>
+                        </div>
                     </div>
                 </div>
             </template>
