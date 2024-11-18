@@ -2,7 +2,7 @@
 import {useChatStore} from "../stores/chat";
 import {computed, onMounted, ref, watch} from "vue";
 import {ArrowDown, Close, MagicStick, Plus, Search, Setting, User} from "@element-plus/icons-vue";
-import {addActiveClass, addHoverClass, removeActiveClass, removeHoverClass} from "../util";
+import {addActiveClass, addHoverClass, removeActiveClass, removeHoverClass, wrapIcon} from "../util";
 import {createConnection, toasterOptions} from "../config";
 import {createToaster} from "@meforma/vue-toaster";
 import {useRoute, useRouter} from "vue-router";
@@ -682,7 +682,9 @@ async function fetchUserInfo() {
                      @click="handleResultClick(item)">
                     <el-card shadow="hover">
                         <div class="text-center">
-                            <el-avatar :src="item.icon" size="large"/>
+                            <el-avatar
+                                :src="wrapIcon(item.icon, item.username ? 'default_avatar.png' : 'bot_avatar.png')"
+                                size="large"/>
                             <p>Name: {{ item.username || item.robot_name }}</p>
                             <p>ID: {{ item.uuid || item.robotid }}</p>
                             <el-rate :model-value="item.rate" disabled></el-rate>
