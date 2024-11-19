@@ -25,27 +25,22 @@
                 <el-table-column
                     prop="icon"
                     label="Icon"
-                    width="100"
                 >
                     <template #default="{ row }">
                         <img :src="wrapIcon(row.icon, 'bot_avatar.png')" alt="icon" class="robot-icon"/>
                     </template>
                 </el-table-column>
-
                 <el-table-column
                     prop="name"
                     label="Model Name"
-                    width="300"
                 />
                 <el-table-column
                     prop="tokensLimit"
                     label="Tokens Limit"
-                    width="150"
                 />
                 <el-table-column
                     prop="tokensPrice"
                     label="Tokens Price"
-                    width="150"
                 />
                 <el-table-column
                     label="Actions"
@@ -285,10 +280,14 @@ const openAddingDialog = (row: any) => {
 const onDialogConfirm = (mode: string) => {
     const base_model_id = settingModel.value.id;
     let formData = new FormData();
+    if (settingModel.value.id === '' || settingModel.value.name === '' || typeof settingModel.value.id == 'undefined' || typeof settingModel.value.name == 'undefined' || typeof settingModel.value.tokensLimit == 'undefined' || typeof settingModel.value.tokensPrice == 'undefined') {
+        toaster.error('Please fill all the fields');
+        return;
+    }
     formData.append('base_model_name', settingModel.value.name);
     formData.append('base_model_id', settingModel.value.id);
-    formData.append('model_tokens_limitation', settingModel.value.tokensLimit.toString());
-    formData.append('price', settingModel.value.tokensPrice.toString());
+    formData.append('model_tokens_limitation', Number(settingModel.value.tokensLimit).toString());
+    formData.append('price', Number(settingModel.value.tokensPrice).toString());
     formData.append('icon', settingModel.value.icon);
 
     let connStr = `/admin/robot/${mode}`;
