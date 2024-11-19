@@ -2,8 +2,8 @@
 # Manual changes might be lost - proceed with caution!
 
 __metadata:
-  version: 8
-  cacheKey: 10
+  version: 6
+  cacheKey: 8
 
 "@adobe/css-tools@npm:~4.3.3":
   version: 4.3.3

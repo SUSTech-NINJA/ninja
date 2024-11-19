@@ -139,3 +139,7 @@ pre code.hljs {
 .el-dropdown-menu__item {
     user-select: none;
 }
+
+.hljs-container pre {
+    text-align: left !important;
+}
