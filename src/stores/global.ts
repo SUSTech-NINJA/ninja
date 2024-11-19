@@ -11,6 +11,7 @@ export const useGlobalStore = defineStore('global', {
             rate: false,
             multimodal: false,
         },
+        rateMode: '',
         coin: 0,
         notifyChange: 0
     }),

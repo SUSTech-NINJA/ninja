@@ -100,8 +100,9 @@ const getMessages = () => {
         });
 };
 
-function openRateDialog() {
+function openRateDialog(type: string) {
     global.dialogs.rate = true;
+    global.rateMode = type;
 }
 
 function editCur() {
@@ -433,7 +434,7 @@ const getRobotsSlicer = computed(() => {
                     <el-button :icon="More" title="More" circle/>
                     <template #dropdown>
                         <el-dropdown-menu>
-                            <el-dropdown-item @click="openRateDialog">Rate the robot</el-dropdown-item>
+                            <el-dropdown-item @click="openRateDialog('robot')">Rate the robot</el-dropdown-item>
                         </el-dropdown-menu>
                     </template>
                 </el-dropdown>
@@ -455,12 +456,13 @@ const getRobotsSlicer = computed(() => {
                         </el-icon>
                     </div>
                     <div>
-                        <el-card shadow="never"
-                                 class="ml-3 mr-3 text-sm w-fit max-w-[500px] lg:max-w-[600px] xl:max-w-[700px]"
-                                 :class="item.role === 'user' ? 'bg-blue-50 text-right' : 'bg-neutral-50 text-left'">
+                        <div class="flex items-end">
+                            <el-card shadow="never"
+                                     class="text-sm w-fit max-w-[500px] lg:max-w-[600px] xl:max-w-[700px]"
+                                     :class="item.role === 'user' ? 'bg-blue-50 text-right mr-3' : 'bg-neutral-50 text-left ml-3'">
                             <span v-if="typeof item.content == 'string'" class="hljs-container"
                                   v-html="sanitizeHtml(marked.parse(item.content) as string)"></span>
-                            <span v-else>
+                                <span v-else>
                                 <p v-for="part in item.content">
                                     <span v-if="part.hasOwnProperty('text')" class="hljs-container"
                                           v-html="sanitizeHtml(marked.parse(part.text) as string)">
@@ -471,10 +473,20 @@ const getRobotsSlicer = computed(() => {
                                     <span v-else>{{ part }}</span>
                                 </p>
                             </span>
-                        </el-card>
-                        <div class="text-xs text-gray-500 text-left ml-3 mr-3"
+                            </el-card>
+                            <el-dropdown>
+                                <el-button size="small" class="ml-1.5" :icon="More" title="More" circle/>
+                                <template #dropdown>
+                                    <el-dropdown-menu>
+                                        <el-dropdown-item @click="openRateDialog('response')">Rate this response
+                                        </el-dropdown-item>
+                                    </el-dropdown-menu>
+                                </template>
+                            </el-dropdown>
+                        </div>
+                        <div class="text-xs text-gray-500 text-left ml-3 mt-3"
                              v-if="isLastAssistantMsg(item.role, index)">
-                            <el-check-tag type="info" size="small" class="mt-2 !text-xs !p-1.5 !font-normal"
+                            <el-check-tag type="info" size="small" class="!text-xs !p-1.5 !font-normal"
                                           @click="toggleInput(suggestion)">{{
                                     suggestion
                                 }}
