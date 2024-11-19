@@ -474,7 +474,7 @@ const getRobotsSlicer = computed(() => {
                                 </p>
                             </span>
                             </el-card>
-                            <el-dropdown>
+                            <el-dropdown v-if="item.role === 'assistant'">
                                 <el-button size="small" class="ml-1.5" :icon="More" title="More" circle/>
                                 <template #dropdown>
                                     <el-dropdown-menu>

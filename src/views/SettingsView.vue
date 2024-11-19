@@ -134,15 +134,16 @@
                 <el-form-item label="Select item">
                     <el-dropdown>
                         <span class="el-dropdown-link">
-                          {{ curModel == null ? 'Select item' : curModel?.name }}
+                          {{ curRobot == null ? 'Select item' : curRobot?.robot_name }}
                           <el-icon class="el-icon--right">
                             <arrow-down/>
                           </el-icon>
                         </span>
                         <template #dropdown>
                             <el-dropdown-menu>
-                                <el-dropdown-item v-for="model in models" :key="model.id" @click="curModel = model">
-                                    {{ model.name }}
+                                <el-dropdown-item v-for="model in allRobots" :key="model.robotid"
+                                                  @click="curRobot = model">
+                                    {{ model.robot_name }}
                                 </el-dropdown-item>
                             </el-dropdown-menu>
                         </template>
@@ -216,7 +217,7 @@ import {createToaster} from "@meforma/vue-toaster";
 import {wrapIcon} from "../util.ts";
 
 const toaster = createToaster(toasterOptions);
-const models = ref([] as any[]), curModel = ref<any>(null);
+const models = ref([] as any[]), curRobot = ref<any>(null), allRobots = ref([] as any[]);
 const global = useGlobalStore();
 
 const settingDialogVisible = ref(false);
@@ -241,6 +242,22 @@ const headerCellStyle = {
 
 const conn = createConnection();
 
+const getAllRobots = () => {
+    conn.get('/robot', {
+        headers: {'Authorization': 'Bearer ' + global.token}
+    })
+        .then(res => {
+            let data = res.data;
+            if (typeof data === 'string') {
+                data = JSON.parse(data);
+            }
+            allRobots.value = data;
+        })
+        .catch(err => {
+            toaster.show('Failed to query robot list', {type: 'error'});
+            allRobots.value = [];
+        });
+};
 const fetchModels = () => {
     conn.get('/admin/robot', {
         headers: {'Authorization': 'Bearer ' + global.token}
@@ -264,6 +281,7 @@ const fetchModels = () => {
 onMounted(() => {
     if (!global.token) return;
     fetchModels();
+    getAllRobots();
 });
 
 const openSettingDialog = (row: any) => {
@@ -300,6 +318,7 @@ const onDialogConfirm = (mode: string) => {
         .then(() => {
             toaster.success('Update successfully');
             fetchModels();
+            getAllRobots();
             InputEnable.value = true;
             settingDialogVisible.value = false;
             AddDialogVisible.value = false;
@@ -321,6 +340,7 @@ const deleteModel = (index: number) => {
             toaster.success('Delete successfully');
             global.notifyChange = 1 - global.notifyChange;
             fetchModels();
+            getAllRobots();
         })
         .catch(() => {
             toaster.error('Failed to delete model');
@@ -343,11 +363,11 @@ const exportModelEvaluation = () => {
 };
 
 function exportModelEval() {
-    if (curModel == null) {
+    if (curRobot == null) {
         toaster.error('Please select a model');
         return;
     }
-    const modelId = curModel.value.id;
+    const modelId = curRobot.value.robotid;
     conn.get(`/admin/export/comment/${modelId}`, {
         headers: {'Authorization': 'Bearer ' + global.token},
         responseType: 'blob',
@@ -357,7 +377,7 @@ function exportModelEval() {
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `${curModel.value.name}_evaluation.xls`;
+            a.download = `${curRobot.value.robot_name}_evaluation.xls`;
             a.click();
             window.URL.revokeObjectURL(url);
             modelEvalDialog.value = false;
