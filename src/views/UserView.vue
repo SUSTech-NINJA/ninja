@@ -712,7 +712,6 @@ function inputKnowledgeFile(event: any) {
                     </div>
                     <p><b>Model:</b> {{ robot.base_model }}</p>
                     <p><b>Price:</b> {{ robot.price }}</p>
-                    <p><b>Users:</b> {{ robot.population }}</p>
                     <div class="flex items-center">
                         <b>Rating:</b>
                         <ElRate :model-value="robot.rate" disabled allow-half class="ml-1"/>
@@ -924,7 +923,7 @@ function inputKnowledgeFile(event: any) {
                             selectedRobot.system_prompt.substring(0, 50) + '...'
                         }}
                     </p>
-                    <p><strong>Creator:</strong> {{ selectedRobot && selectedRobot.creator }}</p>
+                    <p><strong>Creator:</strong> {{ selectedRobot && userInfo.username}}</p>
                     <p><strong>Quota:</strong> {{ selectedRobot && selectedRobot.quota }}</p>
                     <p>
                         <strong>Knowledge Base:</strong>
@@ -934,7 +933,6 @@ function inputKnowledgeFile(event: any) {
                                 : 'N/A'
                         }}
                     </p>
-                    <p><strong>Users:</strong> {{ selectedRobot && selectedRobot.population }}</p>
                     <div class="flex items-center">
                         <p><strong>Rating:</strong></p>
                         <ElRate :model-value="selectedRobot && selectedRobot.rate" disabled allow-half/>
