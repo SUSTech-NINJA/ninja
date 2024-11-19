@@ -209,7 +209,6 @@ async function viewChatHistory(message: any) {
             headers: {'Authorization': 'Bearer ' + global.token}
         });
         if (response.status === 200) {
-            const data = response.data;
             chatHistory.value = response.data || [];
             showChatHistoryModal.value = true;
             chatWithUser.value = message.uuid;
@@ -355,16 +354,33 @@ async function sendRobotRating() {
         return;
     }
     try {
-        const payload = {
-            content: robotComment.value,
-            rate: robotRating.value,
-            userid: global.uuid,
-        };
-        const response = await api.post(
-            `/robot/post/${selectedRobot.value.robotid}`,
-            payload,
-            {headers: {'Authorization': 'Bearer ' + global.token}}
-        );
+        // const payload = {
+        //     content: robotComment.value,
+        //     rate: robotRating.value,
+        //     userid: global.uuid,
+        // };
+        // const response = await api.post(
+        //     `/robot/post/${selectedRobot.value.robotid}`,
+        //     payload,
+        //     {headers: {'Authorization': 'Bearer ' + global.token}}
+        // );
+        // if (response.status === 200) {
+        //     ElMessage.success('Rating submitted successfully');
+        //     robotComment.value = '';
+        //     robotRating.value = 0;
+        //     showRobotRateModal.value = false;
+        //     // Refresh robot info
+        //     await fetchUserInfo();
+        // } else {
+        //     ElMessage.error('Failed to submit rating');
+        // }
+        let formData = new FormData();
+        formData.append('rate', robotRating.value.toString());
+        formData.append('content', robotComment.value);
+        formData.append('userid', global.uuid);
+        const response = await api.post(`/robot/post/${selectedRobot.value.robotid}`, formData, {
+            headers: {'Authorization': 'Bearer ' + global.token}
+        });
         if (response.status === 200) {
             ElMessage.success('Rating submitted successfully');
             robotComment.value = '';
@@ -434,7 +450,7 @@ function inputRobotFile(event: any) {
     };
 }
 
-function deleteRobot(robotId: any) {
+function deleteRobot() {
     try {
         api.delete(`/robot/${selectedRobot.value.robotid}`, {
             headers: {'Authorization': 'Bearer ' + global.token}
@@ -453,7 +469,7 @@ function deleteRobot(robotId: any) {
     }
 }
 
-function editRobot(robotId: any) {
+function editRobot() {
     try {
 
         let formData = new FormData();
@@ -733,7 +749,7 @@ function inputKnowledgeFile(event: any) {
                         <div class="text-center">
                             <p>Are you sure you want to delete this bot?</p>
                             <el-button @click="showIsDeletedDialog=false" type="primary">Cancel</el-button>
-                            <el-button @click="deleteRobot(index)" type="danger">Delete</el-button>
+                            <el-button @click="deleteRobot()" type="danger">Delete</el-button>
                         </div>
                     </ElDialog>
 
@@ -796,7 +812,7 @@ function inputKnowledgeFile(event: any) {
                         </el-form>
 
                         <span slot="footer" class="dialog-footer">
-                            <el-button type="primary" @click="editRobot(index)">Confirm</el-button>
+                            <el-button type="primary" @click="editRobot()">Confirm</el-button>
                             <el-button
                                 @click="showEditDialog = false">Cancel</el-button>
                         </span>
