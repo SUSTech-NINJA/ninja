@@ -304,12 +304,16 @@ function submitBotCreation() {
         toaster.show('Please fill in the required fields', {type: 'warning'});
         return;
     }
+    if (isNaN(Number(createBotData.value.price)) || isNaN(Number(createBotData.value.quota))) {
+        toaster.show('Price and Quota must be numbers', {type: 'warning'});
+        return;
+    }
     formData.append('name', createBotData.value.name);
     formData.append('base_model_id', createBotData.value.base_model_id);
     formData.append('system_prompt', createBotData.value.system_prompt);
     formData.append('knowledge_base', createBotData.value.knowledge_base);
-    formData.append('price', createBotData.value.price.toString());
-    formData.append('quota', createBotData.value.quota.toString());
+    formData.append('price', Number(createBotData.value.price).toString());
+    formData.append('quota', Number(createBotData.value.quota).toString());
     formData.append('icon', createBotData.value.icon);
     conn.post('/robot/new', formData, {
         headers: {'Authorization': 'Bearer ' + global.token}
@@ -828,11 +832,11 @@ async function fetchUserInfo() {
                 <span class="ml-2.5 text-gray-500">{{ knowledgeBaseName }}</span>
             </el-form-item>
             <el-form-item label="Price" required>
-                <el-input v-model="createBotData.price" type="number"/>
+                <el-input v-model="createBotData.price"/>
                 <p class="text-gray-500 text-xs mt-1">How much NINJA coin worth 1 this robot's token</p>
             </el-form-item>
             <el-form-item label="Quota">
-                <el-input v-model="createBotData.quota" type="number"/>
+                <el-input v-model="createBotData.quota"/>
                 <p class="text-gray-500 text-xs mt-1">Input the maximum NINJA coin the user can use, or 0 as
                     infinity</p>
             </el-form-item>
