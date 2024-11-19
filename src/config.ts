@@ -21,8 +21,6 @@ export const baseModels = [
     'gpt-4',
     'gpt-4o',
     'gpt-4o-mini',
-    'o1-preview',
-    'o1-mini',
     'gpt-4-vision-preview'
 ];
 export const visualModels = [
