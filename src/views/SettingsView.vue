@@ -37,7 +37,11 @@
                 <el-table-column
                     prop="tokensLimit"
                     label="Tokens Limit"
-                />
+                >
+                    <template #default="{ row }">
+                        {{ row.tokensLimit === 0 ? '∞' : row.tokensLimit }}
+                    </template>
+                </el-table-column>
                 <el-table-column
                     prop="tokensPrice"
                     label="Tokens Price"
