@@ -386,6 +386,7 @@ async function sendRobotRating() {
             robotComment.value = '';
             robotRating.value = 0;
             showRobotRateModal.value = false;
+            showRobotModal.value = false;
             // Refresh robot info
             await fetchUserInfo();
         } else {
@@ -731,7 +732,8 @@ function inputKnowledgeFile(event: any) {
                         <span class="ml-2">Delete bot</span>
                     </el-button>
 
-                    <el-button class="mt-2" @click.stop="showEditDialog=true; getSelectedRobot(index)">
+                    <el-button class="mt-2" :disabled="robot.is_default"
+                               @click.stop="showEditDialog=true; getSelectedRobot(index)">
                         <el-icon>
                             <Edit/>
                         </el-icon>
@@ -763,7 +765,7 @@ function inputKnowledgeFile(event: any) {
                         <el-form label-width="auto">
                             <el-form-item label="Icon">
                                 <ElAvatar
-                                    :src="wrapIcon(robot.icon, 'bot_avatar.png')"
+                                    :src="wrapIcon(selectedRobot.icon, 'bot_avatar.png')"
                                     size="large"/>
                                 <ElButton class="ml-2">
                                     Select File
@@ -814,7 +816,7 @@ function inputKnowledgeFile(event: any) {
                         <span slot="footer" class="dialog-footer">
                             <el-button type="primary" @click="editRobot()">Confirm</el-button>
                             <el-button
-                                @click="showEditDialog = false">Cancel</el-button>
+                                @click="showEditDialog = false; fetchUserInfo()">Cancel</el-button>
                         </span>
                     </el-dialog>
 
