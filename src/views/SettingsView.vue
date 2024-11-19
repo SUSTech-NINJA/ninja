@@ -306,6 +306,10 @@ const onDialogConfirm = (mode: string) => {
         toaster.error('Please fill all the fields');
         return;
     }
+    if (isNaN(settingModel.value.tokensLimit) || isNaN(settingModel.value.tokensPrice)) {
+        toaster.error('Please input a number');
+        return;
+    }
     formData.append('base_model_name', settingModel.value.name);
     formData.append('base_model_id', settingModel.value.id);
     formData.append('model_tokens_limitation', Number(settingModel.value.tokensLimit).toString());

@@ -560,7 +560,7 @@ function inputKnowledgeFile(event: any) {
                         <p><strong>Username:</strong> {{ userInfo.username }}</p>
                         <p><strong>Intro:</strong> {{ userInfo.intro }}</p>
                         <p v-if="isOwnProfile"><strong>Email:</strong> {{ userInfo.email }}</p>
-                        <p><strong>Rate:</strong>
+                        <p class="flex items-center"><strong>Rate:</strong>
                             <ElRate :model-value="userInfo.rate" disabled allow-half/>
                         </p>
                     </div>
@@ -723,15 +723,14 @@ function inputKnowledgeFile(event: any) {
                         </el-icon>
                         <span class="ml-2">View bot</span>
                     </el-button>
-                    <el-button class="mt-2" :disabled="robot.is_default"
+                    <el-button class="mt-2" v-if="isOwnProfile" :disabled="robot.is_default"
                                @click.stop="showIsDeletedDialog=true; getSelectedRobot(index)">
                         <el-icon>
                             <Delete/>
                         </el-icon>
                         <span class="ml-2">Delete bot</span>
                     </el-button>
-
-                    <el-button class="mt-2" :disabled="robot.is_default"
+                    <el-button class="mt-2" v-if="isOwnProfile" :disabled="robot.is_default"
                                @click.stop="showEditDialog=true; getSelectedRobot(index)">
                         <el-icon>
                             <Edit/>
@@ -923,7 +922,7 @@ function inputKnowledgeFile(event: any) {
                             selectedRobot.system_prompt.substring(0, 50) + '...'
                         }}
                     </p>
-                    <p><strong>Creator:</strong> {{ selectedRobot && userInfo.username}}</p>
+                    <p><strong>Creator:</strong> {{ selectedRobot && userInfo.username }}</p>
                     <p><strong>Quota:</strong> {{ selectedRobot && selectedRobot.quota }}</p>
                     <p>
                         <strong>Knowledge Base:</strong>
