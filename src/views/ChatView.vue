@@ -7,6 +7,8 @@ import {ArrowDown, Check, Cpu, Delete, EditPen, More, User} from "@element-plus/
 import RatePanel from "../components/RatePanel.vue";
 import {useGlobalStore} from "../stores/global";
 import {firstUpperCase} from "../util";
+import {marked} from "marked";
+import sanitizeHtml from 'sanitize-html';
 
 const chat = useChatStore();
 const global = useGlobalStore();
@@ -456,11 +458,12 @@ const getRobotsSlicer = computed(() => {
                         <el-card shadow="never"
                                  class="ml-3 mr-3 text-sm w-fit max-w-[500px] lg:max-w-[600px] xl:max-w-[700px]"
                                  :class="item.role === 'user' ? 'bg-blue-50 text-right' : 'bg-neutral-50 text-left'">
-                            <span v-if="typeof item.content == 'string'">{{ item.content }}</span>
+                            <span v-if="typeof item.content == 'string'" class="hljs-container"
+                                  v-html="sanitizeHtml(marked.parse(item.content) as string)"></span>
                             <span v-else>
                                 <p v-for="part in item.content">
-                                    <span v-if="part.hasOwnProperty('text')">
-                                        {{ part.text }}
+                                    <span v-if="part.hasOwnProperty('text')" class="hljs-container"
+                                          v-html="sanitizeHtml(marked.parse(part.text) as string)">
                                     </span>
                                     <span v-else-if="part.hasOwnProperty('image_url')">
                                         <el-image :src="part['image_url']['url']" class="w-32 h-32"/>
