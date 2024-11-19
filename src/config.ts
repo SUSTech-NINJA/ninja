@@ -21,12 +21,12 @@ export const baseModels = [
     'gpt-4',
     'gpt-4o',
     'gpt-4o-mini',
-    'gpt-o1',
     'gpt-4-vision-preview'
 ];
 export const visualModels = [
     'gpt-4o',
-    'gpt-4-vision-preview'
+    'gpt-4-vision-preview',
+    'gpt-4o-mini'
 ];
 
 export function todo() {

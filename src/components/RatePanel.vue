@@ -44,7 +44,7 @@ watch(() => global.dialogs.rate, (newVal) => {
 </script>
 
 <template>
-    <el-dialog title="Rate the robot" v-model="global.dialogs.rate">
+    <el-dialog :title="'Rate the ' + global.rateMode" v-model="global.dialogs.rate">
         <el-form label-width="auto">
             <el-form-item label="Rate">
                 <el-rate v-model="rate" :colors="colors" :show-score="rate !== 0"/>

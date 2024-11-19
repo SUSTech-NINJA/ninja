@@ -48,65 +48,38 @@
                 align="center"
                 :header-cell-style="headerCellStyle"
             >
-                <!--                <el-table-column-->
-                <!--                    prop="robotid"-->
-                <!--                    label="Robot ID"-->
-                <!--                    width="100"-->
-                <!--                />-->
                 <el-table-column
                     prop="icon"
                     label="Icon"
-                    width="200"
                 >
                     <template #default="{ row }">
-                        <img :src="row.icon" alt="icon" class="robot-icon"/>
+                        <img :src="wrapIcon(row.icon, 'bot_avatar.png')" alt="icon" class="robot-icon"/>
                     </template>
                 </el-table-column>
 
                 <el-table-column
                     prop="robot_name"
                     label="Robot Name"
-                    width="150"
                 />
                 <el-table-column
                     prop="base_model"
                     label="Base Model"
-                    width="150"
                 />
                 <el-table-column
                     prop="price"
                     label="Price"
-                    width="100"
                 />
-                <!--                <el-table-column-->
-                <!--                    prop="quota"-->
-                <!--                    label="Quota"-->
-                <!--                    width="100"-->
-                <!--                />-->
                 <el-table-column
                     prop="rate"
                     label="Rate"
-                    width="100"
                 />
                 <el-table-column
                     prop="popularity"
                     label="Popularity"
-                    width="100"
                 />
-                <!--                <el-table-column-->
-                <!--                    prop="system_prompt"-->
-                <!--                    label="System Prompt"-->
-                <!--                    width="200"-->
-                <!--                />-->
-                <!--                <el-table-column-->
-                <!--                    prop="knowledge_base"-->
-                <!--                    label="Knowledge Base"-->
-                <!--                    width="200"-->
-                <!--                />-->
                 <el-table-column
                     prop="creator"
                     label="Creator"
-                    width="150"
                 />
 
             </el-table>
@@ -120,6 +93,7 @@ import {ElMessage} from 'element-plus';
 import {Close} from "@element-plus/icons-vue";
 import {createConnection} from "../config";
 import {useGlobalStore} from "../stores/global";
+import {wrapIcon} from "../util.ts";
 
 const global = useGlobalStore();
 const conn = createConnection();
