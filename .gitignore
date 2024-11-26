@@ -604,3 +604,4 @@ $RECYCLE.BIN/
 
 # End of https://www.toptal.com/developers/gitignore/api/webstorm,visualstudiocode,windows,linux,macos,vue,node,python,pycharm
 yarn.lock
+src-tauri/gen/android/keystore.properties

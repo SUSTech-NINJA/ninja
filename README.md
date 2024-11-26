@@ -27,6 +27,7 @@ the [Tauri Prerequisites](https://v1.tauri.app/v1/guides/getting-started/prerequ
 ```bash
 yarn
 yarn run tauri dev
+yarn run tauri-build
 ```
 
 ### Tauri for Android
@@ -48,6 +49,15 @@ And he uses these versions of the Android SDK, NDK and Build Tool:
 - Android NDK: 28.0.12433566
 - Android Build Tool: 34.0.0
 - Android Emulator: 33.0.0
+
+Then, if you want to build it, you also need to follow
+the [signing instructions](https://v2.tauri.app/distribute/sign/android/) in the Tauri documentation.
+
+The build command is as follows:
+
+```bash
+yarn run android-build
+```
 
 ## License
 

@@ -8,7 +8,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "tauri": "tauri",
-    "android": "tauri android dev"
+    "tauri-build": "tauri build",
+    "android": "tauri android dev",
+    "android-build": "tauri android build"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
