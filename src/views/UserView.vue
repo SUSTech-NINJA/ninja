@@ -349,8 +349,8 @@ async function rateUser() {
 
 // Send robot rating
 async function sendRobotRating() {
-    if (robotComment.value.trim() === '' || robotRating.value === 0) {
-        ElMessage.warning('Please enter comment and rating');
+    if (robotRating.value === 0) {
+        ElMessage.warning('Please enter rating');
         return;
     }
     try {
@@ -423,6 +423,7 @@ function openPostModal(postId: any) {
     selectedPost.value = posts.value[postId];
     selectedPostId.value = postId;
     showPostModal.value = true;
+    console.log(selectedPost.value.responses);
 }
 
 // Handle logout
@@ -712,6 +713,7 @@ function inputKnowledgeFile(event: any) {
                     </div>
                     <p><b>Model:</b> {{ robot.base_model }}</p>
                     <p><b>Price:</b> {{ robot.price }}</p>
+                    <p><b>Popularity:</b> {{ robot.popularity }}</p>
                     <div class="flex items-center">
                         <b>Rating:</b>
                         <ElRate :model-value="robot.rate" disabled allow-half class="ml-1"/>
@@ -861,7 +863,7 @@ function inputKnowledgeFile(event: any) {
                     </div>
                     <div class="text-left ml-2 p-4 border-gray-300 border-l-[1px] flex-grow bg-gray-50"
                          v-html="sanitizeHtml(marked.parse(selectedPost && selectedPost.content) as string)"></div>
-                </div>
+                     </div>
                 <hr class="mt-2"/>
                 <div class="relative overflow-scroll max-h-[320px]">
                     <div v-for="(response, index) in selectedPost.responses" class="flex flex-row mt-4">
@@ -870,8 +872,8 @@ function inputKnowledgeFile(event: any) {
                                 <ElAvatar :src="wrapIcon(response.icon, 'default_avatar.png')" size="large"/>
                             </div>
                             <div class="w-20">
-                                <b>{{ response.username }}</b><br/>
-                                <p class="text-xs">{{ response.time }}</p>
+                                <b>{{ response.sender }}</b><br/>
+                                <p class="text-xs">{{ response.timestamp }}</p>
                             </div>
                         </div>
                         <div class="text-left ml-2 p-4 border-gray-300 border-l-[1px] flex-grow"
@@ -955,7 +957,7 @@ function inputKnowledgeFile(event: any) {
                 type="textarea"
                 v-model="robotComment"
                 placeholder="Enter your comment"
-                class="mb-4"
+                class="mb-4" v-if="false"
             />
             <div class="flex items-center justify-center mb-4">
                 <span class="mr-2">Rating:</span>

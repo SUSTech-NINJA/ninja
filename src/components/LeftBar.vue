@@ -430,16 +430,15 @@ function closeUserModal() {
 }
 
 function rateRobot() {
-    if (robotComment.value.trim() === '' || robotRating.value === 0) {
-        toaster.show('Please enter comment and rating', {type: 'warning'});
+    if (robotRating.value === 0) {
+        toaster.show('Please enter rating', {type: 'warning'});
         return;
     }
-    let payload = {
-        content: robotComment.value,
-        rate: robotRating.value,
-        userid: global.uuid,
-    };
-    conn.post(`/robot/post/${selectedRobot.value?.robotid}`, payload, {
+    let formData = new FormData();
+    formData.append('rate', robotRating.value.toString());
+    formData.append('content', robotComment.value);
+    formData.append('userid', global.uuid);
+    conn.post(`/robot/post/${selectedRobot.value?.robotid}`, formData, {
         headers: {'Authorization': 'Bearer ' + global.token}
     })
         .then(_res => {
@@ -638,13 +637,13 @@ async function fetchUserInfo() {
             </el-form-item>
             <el-form-item v-if="searchType === 'robot'" label="Search by">
                 <el-radio-group v-model="searchBy">
-                    <el-radio label="id">Robot ID</el-radio>
+                    <!--<el-radio label="id">Robot ID</el-radio>-->
                     <el-radio label="name">Robot Name</el-radio>
                 </el-radio-group>
             </el-form-item>
             <el-form-item v-if="searchType === 'user'" label="Search by">
                 <el-radio-group v-model="searchBy">
-                    <el-radio label="uuid">User UUID</el-radio>
+                    <!--<el-radio label="uuid">User UUID</el-radio>-->
                     <el-radio label="username">Username</el-radio>
                 </el-radio-group>
             </el-form-item>
@@ -718,7 +717,7 @@ async function fetchUserInfo() {
                             : 'N/A'
                     }}
                 </p>
-                <p><strong>Users:</strong> {{ selectedRobot && selectedRobot.population }}</p>
+                <p><strong>Users:</strong> {{ selectedRobot && selectedRobot.popularity }}</p>
                 <div class="flex items-center">
                     <p><strong>Rating:</strong></p>
                     <el-rate :model-value="selectedRobot && selectedRobot.rate" disabled allow-half/>
@@ -742,7 +741,7 @@ async function fetchUserInfo() {
             type="textarea"
             v-model="robotComment"
             placeholder="Enter your comment"
-            class="mb-4"
+            class="mb-4" v-if="false"
         />
         <div class="flex items-center justify-center mb-4">
             <span class="mr-2">Rating:</span>
