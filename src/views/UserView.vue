@@ -349,8 +349,8 @@ async function rateUser() {
 
 // Send robot rating
 async function sendRobotRating() {
-    if (robotComment.value.trim() === '' || robotRating.value === 0) {
-        ElMessage.warning('Please enter comment and rating');
+    if (robotRating.value === 0) {
+        ElMessage.warning('Please enter rating');
         return;
     }
     try {
@@ -957,7 +957,7 @@ function inputKnowledgeFile(event: any) {
                 type="textarea"
                 v-model="robotComment"
                 placeholder="Enter your comment"
-                class="mb-4"
+                class="mb-4" v-if="false"
             />
             <div class="flex items-center justify-center mb-4">
                 <span class="mr-2">Rating:</span>

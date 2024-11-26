@@ -430,8 +430,8 @@ function closeUserModal() {
 }
 
 function rateRobot() {
-    if (robotComment.value.trim() === '' || robotRating.value === 0) {
-        toaster.show('Please enter comment and rating', {type: 'warning'});
+    if (robotRating.value === 0) {
+        toaster.show('Please enter rating', {type: 'warning'});
         return;
     }
     let payload = {
@@ -638,13 +638,13 @@ async function fetchUserInfo() {
             </el-form-item>
             <el-form-item v-if="searchType === 'robot'" label="Search by">
                 <el-radio-group v-model="searchBy">
-                    <el-radio label="id">Robot ID</el-radio>
+                    <!--<el-radio label="id">Robot ID</el-radio>-->
                     <el-radio label="name">Robot Name</el-radio>
                 </el-radio-group>
             </el-form-item>
             <el-form-item v-if="searchType === 'user'" label="Search by">
                 <el-radio-group v-model="searchBy">
-                    <el-radio label="uuid">User UUID</el-radio>
+                    <!--<el-radio label="uuid">User UUID</el-radio>-->
                     <el-radio label="username">Username</el-radio>
                 </el-radio-group>
             </el-form-item>
@@ -742,7 +742,7 @@ async function fetchUserInfo() {
             type="textarea"
             v-model="robotComment"
             placeholder="Enter your comment"
-            class="mb-4"
+            class="mb-4" v-if="false"
         />
         <div class="flex items-center justify-center mb-4">
             <span class="mr-2">Rating:</span>
