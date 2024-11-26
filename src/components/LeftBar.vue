@@ -434,12 +434,11 @@ function rateRobot() {
         toaster.show('Please enter rating', {type: 'warning'});
         return;
     }
-    let payload = {
-        content: robotComment.value,
-        rate: robotRating.value,
-        userid: global.uuid,
-    };
-    conn.post(`/robot/post/${selectedRobot.value?.robotid}`, payload, {
+    let formData = new FormData();
+    formData.append('rate', robotRating.value.toString());
+    formData.append('content', robotComment.value);
+    formData.append('userid', global.uuid);
+    conn.post(`/robot/post/${selectedRobot.value?.robotid}`, formData, {
         headers: {'Authorization': 'Bearer ' + global.token}
     })
         .then(_res => {
@@ -718,7 +717,7 @@ async function fetchUserInfo() {
                             : 'N/A'
                     }}
                 </p>
-                <p><strong>Users:</strong> {{ selectedRobot && selectedRobot.population }}</p>
+                <p><strong>Users:</strong> {{ selectedRobot && selectedRobot.popularity }}</p>
                 <div class="flex items-center">
                     <p><strong>Rating:</strong></p>
                     <el-rate :model-value="selectedRobot && selectedRobot.rate" disabled allow-half/>
