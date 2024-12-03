@@ -732,7 +732,7 @@ function inputKnowledgeFile(event: any) {
                         </el-icon>
                         <span class="ml-2">Delete bot</span>
                     </el-button>
-                    <el-button class="mt-2" v-if="isOwnProfile" :disabled="robot.is_default"
+                    <el-button class="mt-2" v-if="isOwnProfile || global.username==='admin' " :disabled="robot.is_default"
                                @click.stop="showEditDialog=true; getSelectedRobot(index)">
                         <el-icon>
                             <Edit/>
